@@ -16,7 +16,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
         {
             context.Add(categoryToAdd);
             await context.SaveChangesAsync();
-            return OperationResult<CategoryDto>.Success(new CategoryDto(categoryToAdd));
+            return OperationResult<CategoryDto?>.Success(new CategoryDto(categoryToAdd));
         }
         catch (Exception ex)
         {
@@ -37,7 +37,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
             
             context.Categories.Update(categoryToUpdate);
             await context.SaveChangesAsync();
-            return OperationResult<CategoryDto>.Success(new CategoryDto(categoryToUpdate));
+            return OperationResult<CategoryDto?>.Success(new CategoryDto(categoryToUpdate));
         }
         catch (Exception ex)
         {
@@ -55,7 +55,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
             
             context.Categories.Remove(categoryToDelete);
             await context.SaveChangesAsync();
-            return OperationResult<CategoryDto>.Success(new CategoryDto(categoryToDelete));
+            return OperationResult<CategoryDto?>.Success(new CategoryDto(categoryToDelete));
         }
         catch (Exception ex)
         {
@@ -75,7 +75,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
             var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == id);
             if (category is null)
                 return OperationResult<CategoryDto>.Failure("Category not found");
-            return OperationResult<CategoryDto>.Success(new CategoryDto(category));
+            return OperationResult<CategoryDto?>.Success(new CategoryDto(category));
         }
         catch (Exception ex)
         {
