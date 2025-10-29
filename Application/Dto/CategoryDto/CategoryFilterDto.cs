@@ -1,4 +1,4 @@
-﻿namespace Application.Dto;
+﻿namespace Application.Dto.CategoryDto;
 
 public class CategoryFilterDto
 {

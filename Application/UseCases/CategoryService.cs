@@ -1,5 +1,5 @@
 ﻿using Application.Interfaces.Services;
-using Application.Dto;
+using Application.Dto.CategoryDto;
 
 namespace Application.UseCases;
 

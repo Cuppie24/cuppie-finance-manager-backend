@@ -1,5 +1,6 @@
-﻿using Application.Interfaces.Repositories;
-using Application.Dto;
+﻿using Application.Dto;
+using Application.Dto.TransactionDto;
+using Application.Interfaces.Repositories;
 using Domain.Entities;
 using Infrastructure.DbContext;
 using Microsoft.EntityFrameworkCore;
@@ -30,18 +31,18 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
         }
     }
 
-    public async Task<OperationResult<TransactionDto?>> UpdateTransactionAsync(TransactionDto transaction)
+    public async Task<OperationResult<TransactionDto?>> UpdateTransactionAsync(PatchTransactionDto transaction)
     {
         try
         {
             var transactionToUpdate = await context.Transactions.FirstOrDefaultAsync(t => t.Id == transaction.Id);
             if(transactionToUpdate is null) return OperationResult<TransactionDto>.Failure("Transaction not found");
-        
-            transactionToUpdate.Amount = transaction.Amount;
-            transactionToUpdate.CategoryId = transaction.CategoryId;
-            transactionToUpdate.UserId = transaction.UserId;
-            transactionToUpdate.CreatedAt = transaction.CreatedAt;
-            transactionToUpdate.Comment = transaction.Comment;
+
+            transactionToUpdate.Amount = transaction.Amount ?? transactionToUpdate.Amount;
+            transactionToUpdate.CategoryId = transaction.CategoryId ?? transactionToUpdate.CategoryId;
+            transactionToUpdate.UserId = transaction.UserId ?? transactionToUpdate.UserId;
+            transactionToUpdate.CreatedAt = transaction.CreatedAt ?? transactionToUpdate.CreatedAt;
+            transactionToUpdate.Comment = transaction.Comment ?? transactionToUpdate.Comment;
             
             context.Transactions.Update(transactionToUpdate);
             await context.SaveChangesAsync();

@@ -1,4 +1,4 @@
-﻿using Application.Dto;
+﻿using Application.Dto.CategoryDto;
 
 namespace Application.Interfaces.Services;
 

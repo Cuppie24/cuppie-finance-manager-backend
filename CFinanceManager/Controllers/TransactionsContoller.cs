@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Application.Dto;
+using Application.Dto.TransactionDto;
 using Application.Interfaces.Services;
 
 namespace CFinanceManager.Controllers;
@@ -42,7 +43,7 @@ public class TransactionsController(ITransactionService transactionService, ILog
     }
 
     [HttpPatch] 
-    public async Task<ActionResult<TransactionDto>> PatchTransaction([FromBody] TransactionDto? transactionDto)
+    public async Task<ActionResult<TransactionDto>> PatchTransaction([FromBody] PatchTransactionDto? transactionDto)
     {
         logger.LogInformation("Transaction patch request received: id: {id}", transactionDto?.Id);
         if (!ModelState.IsValid)

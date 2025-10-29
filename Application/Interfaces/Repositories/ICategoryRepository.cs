@@ -1,4 +1,5 @@
-﻿using Application.Dto;
+﻿using Application.Dto.CategoryDto;
+using Application.Dto;
 
 namespace Application.Interfaces.Repositories;
 

@@ -1,6 +1,6 @@
 ﻿using Domain.Entities;
 
-namespace Application.Dto;
+namespace Application.Dto.CategoryDto;
 
 public class CategoryDto(string? name)
 {

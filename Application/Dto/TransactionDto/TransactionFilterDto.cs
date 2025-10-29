@@ -1,4 +1,4 @@
-﻿namespace Application.Dto;
+﻿namespace Application.Dto.TransactionDto;
 
 public class TransactionFilterDto
 {

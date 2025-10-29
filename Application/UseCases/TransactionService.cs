@@ -1,5 +1,6 @@
 ﻿using Application.Interfaces.Services;
 using Application.Dto;
+using Application.Dto.TransactionDto;
 using Application.Interfaces.Repositories;
 using Microsoft.Extensions.Logging;
 
@@ -21,7 +22,7 @@ public class TransactionService(ITransactionRepository transactionRepository, IL
             : OperationResult<TransactionDto>.Failure(postResult.Message);
     }
 
-    public async Task<OperationResult<TransactionDto?>> UpdateTransactionAsync(TransactionDto? transaction)
+    public async Task<OperationResult<TransactionDto?>> UpdateTransactionAsync(PatchTransactionDto? transaction)
     {
         if(transaction is null)
             return OperationResult<TransactionDto>.Failure("Transaction is null");
