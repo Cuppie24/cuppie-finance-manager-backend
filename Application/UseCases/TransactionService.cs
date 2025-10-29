@@ -17,19 +17,25 @@ public class TransactionService(ITransactionRepository transactionRepository, IL
         };
 
         var postResult = await transactionRepository.AddTransactionAsync(transactionToAdd);
-        if (postResult.IsSuccess)
-            return OperationResult<TransactionDto?>.Success(postResult.Data);
-        return  OperationResult<TransactionDto>.Failure(postResult.Message);
+        return postResult.IsSuccess ? OperationResult<TransactionDto?>.Success(postResult.Data) 
+            : OperationResult<TransactionDto>.Failure(postResult.Message);
     }
 
-    public async Task<OperationResult<TransactionDto>> UpdateTransactionAsync(TransactionDto transaction)
+    public async Task<OperationResult<TransactionDto?>> UpdateTransactionAsync(TransactionDto? transaction)
     {
-        throw new NotImplementedException();
+        if(transaction is null)
+            return OperationResult<TransactionDto>.Failure("Transaction is null");
+        var updateResult = await transactionRepository.UpdateTransactionAsync(transaction);
+        return updateResult.IsSuccess ? OperationResult<TransactionDto?>.Success(updateResult.Data) 
+            : OperationResult<TransactionDto>.Failure(updateResult.Message);
     }
 
-    public async Task<OperationResult<TransactionDto>> DeleteTransactionAsync(long id)
+    public async Task<OperationResult<TransactionDto?>> DeleteTransactionAsync(long id)
     {
-        throw new NotImplementedException();
+        var deleteResult = await transactionRepository.DeleteTransactionAsync(id);
+        if(deleteResult.IsSuccess)
+            return OperationResult<TransactionDto?>.Success(deleteResult.Data);
+        return OperationResult<TransactionDto>.Failure(deleteResult.Message);
     }
 
     public async Task<OperationResult<List<TransactionDto>>> GetTransactionsAsync(TransactionFilterDto filter)

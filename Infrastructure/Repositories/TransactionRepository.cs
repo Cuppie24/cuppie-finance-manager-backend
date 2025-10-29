@@ -53,7 +53,7 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
         }
     }
 
-    public async Task<OperationResult<TransactionDto?>> DeleteTransactionAsync(int id)
+    public async Task<OperationResult<TransactionDto?>> DeleteTransactionAsync(long id)
     {
         try
         {
