@@ -4,8 +4,8 @@ namespace Application.Interfaces.Services;
 
 public interface ITransactionService
 {
-    public TransactionDto AddTransaction(TransactionDto transaction);
-    public TransactionDto UpdateTransaction(TransactionDto transaction);
-    public TransactionDto DeleteTransaction(int id);
-    public List<TransactionDto> GetTransactions(TransactionFilterDto filter);
+    public Task<OperationResult<TransactionDto?>> AddTransactionAsync(CreateTransactionDto transaction);
+    public Task<OperationResult<TransactionDto>> UpdateTransactionAsync(TransactionDto transaction);
+    public Task<OperationResult<TransactionDto>> DeleteTransactionAsync(int id);
+    public Task<OperationResult<List<TransactionDto>>> GetTransactionsAsync(TransactionFilterDto filter);
 }

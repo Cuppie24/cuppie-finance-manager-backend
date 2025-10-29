@@ -30,4 +30,12 @@ public class TransactionDto
         CategoryId = entity.CategoryId;
         UserId = entity.UserId;
     }
+
+    public TransactionDto(CreateTransactionDto dto)
+    {
+        Amount = dto.Amount;
+        Comment = dto.Comment;
+        CategoryId = dto.CategoryId;
+        UserId = dto.UserId;
+    }
 }

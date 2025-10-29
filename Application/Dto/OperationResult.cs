@@ -13,5 +13,5 @@ public class OperationResult<T>(T data, bool isSuccess, string message) : Operat
 {
     public T? Data { get; set; } = data;
     public static OperationResult<T> Success(T data) => new OperationResult<T>(data, true, string.Empty);
-    public new static OperationResult<T?> Failure(string message) => new OperationResult<T?>(default(T), false, message);
+    public new static OperationResult<T?> Failure(string? message) => new OperationResult<T?>(default(T), false, message);
 }

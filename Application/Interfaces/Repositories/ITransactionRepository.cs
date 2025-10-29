@@ -4,9 +4,9 @@ namespace Application.Interfaces.Repositories;
 
 public interface ITransactionRepository
 {
-    Task<OperationResult<TransactionDto?>> AddTransaction(TransactionDto transaction);
-    Task<OperationResult<TransactionDto?>> UpdateTransaction(TransactionDto transaction);
-    Task<OperationResult<TransactionDto?>> DeleteTransaction(int id);
-    Task<OperationResult<List<TransactionDto>>> GetTransactions(TransactionFilterDto filter);
+    Task<OperationResult<TransactionDto?>> AddTransactionAsync(TransactionDto transaction);
+    Task<OperationResult<TransactionDto?>> UpdateTransactionAsync(TransactionDto transaction);
+    Task<OperationResult<TransactionDto?>> DeleteTransactionAsync(int id);
+    Task<OperationResult<List<TransactionDto>>> GetTransactionsAsync(TransactionFilterDto filter);
     Task<OperationResult<TransactionDto?>> GetTransaction(long id);
 }

@@ -8,14 +8,21 @@ namespace Infrastructure.Repositories;
 
 public class TransactionRepository(AppDbContext context) : ITransactionRepository
 {
-    public async Task<OperationResult<TransactionDto?>> AddTransaction(TransactionDto transaction)
+    public async Task<OperationResult<TransactionDto?>> AddTransactionAsync(TransactionDto? transaction)
     {
-        var transactionToAdd = new TransactionEntity(transaction.Amount, transaction.CategoryId, transaction.UserId,  transaction.CreatedAt);
+        if(transaction is null)
+            return OperationResult<TransactionDto?>.Failure("Transaction is null");
+        var transactionToAdd = new TransactionEntity(
+            transaction.Amount, 
+            transaction.CategoryId, 
+            transaction.UserId,  
+            transaction.CreatedAt,
+            transaction.Comment);
         try
         {
             context.Transactions.Add(transactionToAdd);
             await context.SaveChangesAsync();
-            return OperationResult<TransactionDto>.Success(new TransactionDto(transactionToAdd));
+            return OperationResult<TransactionDto?>.Success(new TransactionDto(transactionToAdd));
         }
         catch (Exception ex)
         {
@@ -23,7 +30,7 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
         }
     }
 
-    public async Task<OperationResult<TransactionDto?>> UpdateTransaction(TransactionDto transaction)
+    public async Task<OperationResult<TransactionDto?>> UpdateTransactionAsync(TransactionDto transaction)
     {
         try
         {
@@ -38,7 +45,7 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
             
             context.Transactions.Update(transactionToUpdate);
             await context.SaveChangesAsync();
-            return OperationResult<TransactionDto>.Success(new TransactionDto(transactionToUpdate));
+            return OperationResult<TransactionDto?>.Success(new TransactionDto(transactionToUpdate));
         }
         catch (Exception ex)
         {
@@ -46,7 +53,7 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
         }
     }
 
-    public async Task<OperationResult<TransactionDto?>> DeleteTransaction(int id)
+    public async Task<OperationResult<TransactionDto?>> DeleteTransactionAsync(int id)
     {
         try
         {
@@ -63,7 +70,7 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
         }
     }
 
-    public async Task<OperationResult<List<TransactionDto>>> GetTransactions(TransactionFilterDto filter)
+    public async Task<OperationResult<List<TransactionDto>>> GetTransactionsAsync(TransactionFilterDto filter)
     {
         throw new NotImplementedException();
     }
@@ -72,7 +79,7 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
     {
         try
         {
-            var transaction = await context.Transactions.FirstOrDefaultAsync(t => t.Id == id);
+            var transaction = await context.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.Id == id);
             if(transaction is null) return OperationResult<TransactionDto?>.Failure("Transaction not found");
             return OperationResult<TransactionDto?>.Success(new TransactionDto(transaction));
         }

@@ -10,12 +10,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : Microsoft.En
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<TransactionEntity>(entity =>
-        {
-            entity
-                .HasOne(t => t.Category)
-                .WithMany(t => t.Transactions)
-                .HasForeignKey(t => t.CategoryId);
-        });
+        // modelBuilder.Entity<TransactionEntity>(entity =>
+        // {
+        //     // entity
+        //     //     .HasOne(t => t.CategoryEntity)
+        //     //     .WithMany(t => t.Transactions)
+        //     //     .HasForeignKey(t => t.CategoryId);
+        // });
     }
 }

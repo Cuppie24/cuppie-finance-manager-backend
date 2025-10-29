@@ -15,19 +15,20 @@ public class TransactionEntity
     
     [MaxLength(50)]
     public string? Comment { get; set; }
-    public CategoryEntity Category { get; set; }
-    
+    // public CategoryEntity CategoryEntity { get; set; }
+
     [Required]
     public int CategoryId { get; set; }
     
     [Required]
     public int UserId { get; set; }
 
-    public TransactionEntity(decimal amount, int categoryId, int userId,  DateTime createdAt)
+    public TransactionEntity(decimal amount, int categoryId, int userId,  DateTime createdAt, string? comment)
     {
         Amount = amount;
         CategoryId = categoryId;
         UserId = userId;
         CreatedAt = createdAt;
+        Comment = comment;
     }
 }

@@ -22,7 +22,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
         {
             return OperationResult<CategoryDto?>.Failure(ex.Message);
         }
-}
+    }
 
     public async Task<OperationResult<CategoryDto?>> UpdateCategory(CategoryDto newCategory)
     {
@@ -72,7 +72,7 @@ public class CategoryRepository(AppDbContext context) : ICategoryRepository
     {
         try
         {
-            var category = await context.Categories.FirstOrDefaultAsync(c => c.Id == id);
+            var category = await context.Categories.AsNoTracking().FirstOrDefaultAsync(c => c.Id == id);
             if (category is null)
                 return OperationResult<CategoryDto>.Failure("Category not found");
             return OperationResult<CategoryDto?>.Success(new CategoryDto(category));
