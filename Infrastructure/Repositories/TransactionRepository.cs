@@ -44,7 +44,6 @@ public class TransactionRepository(AppDbContext context) : ITransactionRepositor
             transactionToUpdate.CreatedAt = transaction.CreatedAt ?? transactionToUpdate.CreatedAt;
             transactionToUpdate.Comment = transaction.Comment ?? transactionToUpdate.Comment;
             
-            context.Transactions.Update(transactionToUpdate);
             await context.SaveChangesAsync();
             return OperationResult<TransactionDto?>.Success(new TransactionDto(transactionToUpdate));
         }

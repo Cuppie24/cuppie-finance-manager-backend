@@ -12,6 +12,7 @@ public class TransactionsController(ITransactionService transactionService, ILog
     [HttpGet()]
     public async Task<ActionResult<TransactionDto>> GetTransaction([FromQuery] long id)
     {
+        logger.LogInformation("Transaction get request received: id: {id}", id);
         var getResult = await transactionService.GetTransactionAsync(id);
         if (getResult.IsSuccess)
         {
