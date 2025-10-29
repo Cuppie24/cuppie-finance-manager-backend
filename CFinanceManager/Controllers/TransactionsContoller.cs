@@ -9,19 +9,26 @@ namespace CFinanceManager.Controllers;
 public class TransactionsController(ITransactionService transactionService, ILogger<TransactionsController> logger) : ControllerBase
 {
     [HttpGet()]
-    public async Task<ActionResult<TransactionDto>> GetTransactions()
+    public async Task<ActionResult<TransactionDto>> GetTransaction([FromQuery] long id)
     {
-        throw new NotImplementedException(); 
+        var getResult = await transactionService.GetTransactionAsync(id);
+        if (getResult.IsSuccess)
+        {
+            logger.LogInformation("Get transaction successful: {result}", JsonSerializer.Serialize(getResult.Data));
+            return Ok(getResult.Data);
+        }
+        logger.LogWarning("Error while fetching transaction: {message}", getResult.Message);
+        return BadRequest(new {message = getResult.Message});
     }
 
     [HttpPost]
     public async Task<ActionResult<TransactionDto>> PostTransaction([FromBody] CreateTransactionDto? transactionDto)
     {
         logger.LogInformation("Transaction post request received:");
-        if (transactionDto is null)
+        if (!ModelState.IsValid)
         {
-            logger.LogWarning("Request body is null");
-            return BadRequest("");
+            logger.LogWarning("Invalid model state");
+            return BadRequest(ModelState);
         }
 
         var postResult = await transactionService.AddTransactionAsync(transactionDto);
@@ -30,8 +37,8 @@ public class TransactionsController(ITransactionService transactionService, ILog
             logger.LogInformation("Transaction post successful: {result}", JsonSerializer.Serialize(postResult.Data));
             return Ok(postResult.Data);
         }
-        logger.LogWarning("Error whihle posting transaction: {message}", postResult.Message);
-        return BadRequest(postResult.Message);
+        logger.LogWarning("Error while posting transaction: {message}", postResult.Message);
+        return BadRequest(new {message = postResult.Message});
     }
 
     [HttpPatch] 
@@ -51,7 +58,7 @@ public class TransactionsController(ITransactionService transactionService, ILog
             return Ok(patchResult.Data);
         }
         logger.LogWarning("Error patching transaction: {message}", patchResult.Message);
-        return BadRequest(patchResult.Message);
+        return BadRequest(new {message = patchResult.Message});
             
         
     }
@@ -73,6 +80,6 @@ public class TransactionsController(ITransactionService transactionService, ILog
             return Ok(deleteResult.Data);
         }
         logger.LogWarning("Error while deleting transaction: {message}", deleteResult.Message);
-        return BadRequest(deleteResult.Message);
+        return BadRequest(new {message = deleteResult.Message});
     }
 }

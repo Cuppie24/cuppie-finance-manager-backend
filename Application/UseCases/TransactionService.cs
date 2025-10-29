@@ -42,4 +42,12 @@ public class TransactionService(ITransactionRepository transactionRepository, IL
     {
         throw new NotImplementedException();
     }
+
+    public async Task<OperationResult<TransactionDto?>> GetTransactionAsync(long id)
+    {
+        var getResult = await transactionRepository.GetTransaction(id);
+        if (getResult.IsSuccess)
+            return OperationResult<TransactionDto?>.Success(getResult.Data);
+        return OperationResult<TransactionDto>.Failure(getResult.Message);
+    }
 }
