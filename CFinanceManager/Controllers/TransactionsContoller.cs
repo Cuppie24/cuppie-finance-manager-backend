@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
 using Application.Dto;
 using Application.Interfaces.Services;
 
@@ -24,9 +25,12 @@ public class TransactionsController(ITransactionService transactionService, ILog
         }
 
         var postResult = await transactionService.AddTransactionAsync(transactionDto);
-        logger.LogInformation("Post result: {message}\r\n{result}",postResult.Message, postResult.Message);
         if (postResult.IsSuccess)
+        {
+            logger.LogInformation("Transaction post successful: {result}", JsonSerializer.Serialize(postResult.Data));
             return Ok(postResult.Data);
+        }
+        logger.LogWarning("Error whihle posting transaction: {message}", postResult.Message);
         return BadRequest(postResult.Message);
     }
 
@@ -42,7 +46,11 @@ public class TransactionsController(ITransactionService transactionService, ILog
         
         var patchResult = await transactionService.UpdateTransactionAsync(transactionDto);
         if (patchResult.IsSuccess)
+        {
+            logger.LogInformation("Transaction patch successful: {result}", JsonSerializer.Serialize(patchResult.Data));
             return Ok(patchResult.Data);
+        }
+        logger.LogWarning("Error patching transaction: {message}", patchResult.Message);
         return BadRequest(patchResult.Message);
             
         
@@ -60,7 +68,11 @@ public class TransactionsController(ITransactionService transactionService, ILog
 
         var deleteResult = await transactionService.DeleteTransactionAsync(id);
         if (deleteResult.IsSuccess)
+        {
+            logger.LogInformation("Transaction delete successful: {result}", JsonSerializer.Serialize(deleteResult.Data));
             return Ok(deleteResult.Data);
+        }
+        logger.LogWarning("Error while deleting transaction: {message}", deleteResult.Message);
         return BadRequest(deleteResult.Message);
     }
 }
