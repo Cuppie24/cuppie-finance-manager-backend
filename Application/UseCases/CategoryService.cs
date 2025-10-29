@@ -15,7 +15,7 @@ public class CategoryService : ICategoryService
         throw new NotImplementedException();
     }
 
-    public CategoryDto DeleteCategory(int id)
+    public CategoryDto DeleteCategory(long id)
     {
         throw new NotImplementedException();
     }

@@ -14,16 +14,14 @@ public class TransactionsController(ITransactionService transactionService, ILog
     }
 
     [HttpPost]
-    public async Task<ActionResult<TransactionDto>> AddTransaction([FromBody] CreateTransactionDto? transactionDto)
+    public async Task<ActionResult<TransactionDto>> PostTransaction([FromBody] CreateTransactionDto? transactionDto)
     {
-        logger.LogInformation("Post transaction request received:");
+        logger.LogInformation("Transaction post request received:");
         if (transactionDto is null)
         {
             logger.LogWarning("Request body is null");
-            return BadRequest();
+            return BadRequest("");
         }
-        logger.LogInformation("Amount: {amount}\r\n" +
-                              "Comment: {comment}\r\n", transactionDto?.Amount, transactionDto?.Comment);
 
         var postResult = await transactionService.AddTransactionAsync(transactionDto);
         logger.LogInformation("Post result: {message}\r\n{result}",postResult.Message, postResult.Message);
@@ -35,12 +33,34 @@ public class TransactionsController(ITransactionService transactionService, ILog
     [HttpPatch] 
     public async Task<ActionResult<TransactionDto>> PatchTransaction([FromBody] TransactionDto? transactionDto)
     {
-        throw new NotImplementedException();
+        logger.LogInformation("Transaction patch request received: id: {id}", transactionDto?.Id);
+        if (!ModelState.IsValid)
+        {
+            logger.LogWarning("Invalid model state");
+            return BadRequest(ModelState);
+        }
+        
+        var patchResult = await transactionService.UpdateTransactionAsync(transactionDto);
+        if (patchResult.IsSuccess)
+            return Ok(patchResult.Data);
+        return BadRequest(patchResult.Message);
+            
+        
     }
 
     [HttpDelete]
-    public async Task<ActionResult<TransactionDto>> DeleteTransaction([FromBody] TransactionDto? transactionDto)
+    public async Task<ActionResult<TransactionDto>> DeleteTransaction([FromQuery] long id)
     {
-        throw new NotImplementedException();
+        logger.LogInformation("Transaction delete request received: id: {id}", id);
+        if (!ModelState.IsValid)
+        {
+            logger.LogWarning("Invalid model state");
+            return BadRequest(ModelState);
+        }
+
+        var deleteResult = await transactionService.DeleteTransactionAsync(id);
+        if (deleteResult.IsSuccess)
+            return Ok(deleteResult.Data);
+        return BadRequest(deleteResult.Message);
     }
 }

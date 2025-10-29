@@ -27,7 +27,7 @@ public class TransactionService(ITransactionRepository transactionRepository, IL
         throw new NotImplementedException();
     }
 
-    public async Task<OperationResult<TransactionDto>> DeleteTransactionAsync(int id)
+    public async Task<OperationResult<TransactionDto>> DeleteTransactionAsync(long id)
     {
         throw new NotImplementedException();
     }
