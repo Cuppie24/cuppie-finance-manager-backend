@@ -2,7 +2,7 @@
 
 public class PatchTransactionDto
 {
-    public int Id { get; set; }
+    public long Id { get; set; }
     public string? Comment { get; set; }
     public DateTime? CreatedAt { get; set; }
     public decimal? Amount { get; set; }
