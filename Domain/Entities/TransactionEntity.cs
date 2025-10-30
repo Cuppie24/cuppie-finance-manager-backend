@@ -8,7 +8,7 @@ public class TransactionEntity
     public long Id { get; set; }
     
     [Required]
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
     
     [Required, Column(TypeName = "numeric(18,2)")]
     public decimal Amount { get; set; }
@@ -18,12 +18,12 @@ public class TransactionEntity
     // public CategoryEntity CategoryEntity { get; set; }
 
     [Required]
-    public int CategoryId { get; set; }
+    public long CategoryId { get; set; }
     
     [Required]
-    public int UserId { get; set; }
+    public long UserId { get; set; }
 
-    public TransactionEntity(decimal amount, int categoryId, int userId,  DateTime createdAt, string? comment)
+    public TransactionEntity(decimal amount, long categoryId, long userId,  DateTime createdAt, string? comment)
     {
         Amount = amount;
         CategoryId = categoryId;
@@ -31,4 +31,5 @@ public class TransactionEntity
         CreatedAt = createdAt;
         Comment = comment;
     }
+
 }

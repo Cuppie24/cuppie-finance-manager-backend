@@ -1,9 +1,15 @@
-﻿namespace Application.Dto.TransactionDto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Application.Dto.TransactionDto;
 
 public class CreateTransactionDto
 {
     public string? Comment { get; set; }
-    public decimal Amount { get; set; }
-    public int CategoryId { get; set; }
-    public int UserId { get; set; }
+    public DateTime? CreatedAt { get; set; }
+    [Required]
+    public decimal? Amount { get; set; }
+    [Required]
+    public long? CategoryId { get; set; }
+    [Required]
+    public long? UserId { get; set; }
 }

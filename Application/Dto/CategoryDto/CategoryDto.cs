@@ -2,14 +2,10 @@
 
 namespace Application.Dto.CategoryDto;
 
-public class CategoryDto(string? name)
+public class CategoryDto(long id, string name)
 {
-    public long Id { get; set; }
-    public string? Name { get; set; }
+    public long Id { get; set; } = id;
+    public string Name { get; set; } = name;
 
-    public CategoryDto(CategoryEntity category) : this(category.Name)
-    {
-        Id = category.Id;
-        Name = category.Name;
-    }
+    public CategoryDto(CategoryEntity categoryEntity) : this (categoryEntity.Id, categoryEntity.Name) { }
 }

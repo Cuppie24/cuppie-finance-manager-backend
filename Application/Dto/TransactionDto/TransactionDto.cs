@@ -6,10 +6,10 @@ public class TransactionDto
 {
     public long Id { get; set; }
     public decimal Amount { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime? CreatedAt { get; set; }
     public string? Comment { get; set; }
-    public int CategoryId { get; set; }
-    public int UserId { get; set; }
+    public long CategoryId { get; set; }
+    public long UserId { get; set; }
 
     public TransactionDto() { }
 
@@ -29,13 +29,5 @@ public class TransactionDto
         Comment = entity.Comment;
         CategoryId = entity.CategoryId;
         UserId = entity.UserId;
-    }
-
-    public TransactionDto(CreateTransactionDto dto)
-    {
-        Amount = dto.Amount;
-        Comment = dto.Comment;
-        CategoryId = dto.CategoryId;
-        UserId = dto.UserId;
     }
 }

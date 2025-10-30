@@ -9,14 +9,8 @@ namespace Infrastructure.Repositories;
 
 public class TransactionRepository(AppDbContext context) : ITransactionRepository
 {
-    public async Task<OperationResult<TransactionDto?>> AddTransactionAsync(TransactionDto transaction)
+    public async Task<OperationResult<TransactionDto?>> AddTransactionAsync(TransactionEntity transactionToAdd)
     {
-        var transactionToAdd = new TransactionEntity(
-            transaction.Amount, 
-            transaction.CategoryId, 
-            transaction.UserId,  
-            transaction.CreatedAt,
-            transaction.Comment);
         try
         {
             context.Transactions.Add(transactionToAdd);

@@ -4,14 +4,14 @@ using Infrastructure.DbContext;
 using Application.Dto.CategoryDto;
 using Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Repositories;
 
-public class CategoryRepository(AppDbContext context) : ICategoryRepository
+public class CategoryRepository(AppDbContext context, ILogger<CategoryRepository> logger) : ICategoryRepository
 {
-    public async Task<OperationResult<CategoryDto?>> AddCategory(CreateCategoryDto categoryDto)
+    public async Task<OperationResult<CategoryDto?>> AddCategory(CategoryEntity categoryToAdd)
     {
-        var categoryToAdd = new CategoryEntity(categoryDto.Name);
         try
         {
             context.Categories.Add(categoryToAdd);

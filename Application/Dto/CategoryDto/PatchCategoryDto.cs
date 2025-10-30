@@ -1,7 +1,10 @@
-﻿namespace Application.Dto.CategoryDto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Application.Dto.CategoryDto;
 
 public class PatchCategoryDto
 {
-    public long Id { get; set; }
-    public string? Name;
+    [Required]
+    public long? Id { get; set; }
+    public string? Name { get; set; }
 }

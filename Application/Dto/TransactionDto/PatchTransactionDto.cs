@@ -1,8 +1,11 @@
-﻿namespace Application.Dto.TransactionDto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Application.Dto.TransactionDto;
 
 public class PatchTransactionDto
 {
-    public long Id { get; set; }
+    [Required]
+    public long? Id { get; set; }
     public string? Comment { get; set; }
     public DateTime? CreatedAt { get; set; }
     public decimal? Amount { get; set; }

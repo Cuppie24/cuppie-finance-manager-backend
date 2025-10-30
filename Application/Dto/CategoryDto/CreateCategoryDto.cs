@@ -1,6 +1,8 @@
-﻿namespace Application.Dto.CategoryDto;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Application.Dto.CategoryDto;
 
 public class CreateCategoryDto
 {
-    public string Name { get; set; } = null!;
+    [Required] public string? Name { get; set; }
 }

@@ -2,18 +2,28 @@
 using Application.Dto;
 using Application.Dto.TransactionDto;
 using Application.Interfaces.Repositories;
+using Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace Application.UseCases;
 
 public class TransactionService(ITransactionRepository transactionRepository, ILogger<TransactionService> logger): ITransactionService
 {
-    public async Task<OperationResult<TransactionDto?>> AddTransactionAsync(CreateTransactionDto newTransaction)
+    public async Task<OperationResult<TransactionDto?>> AddTransactionAsync(CreateTransactionDto createTransactionDto)
     {
-        var transactionToAdd = new TransactionDto(newTransaction)
-        {
-            CreatedAt = DateTime.UtcNow
-        };
+        if(!createTransactionDto.Amount.HasValue)
+            return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
+        if(!createTransactionDto.CategoryId.HasValue)
+            return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
+        if(!createTransactionDto.UserId.HasValue)
+            return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
+        
+        var transactionToAdd = new TransactionEntity(
+            createTransactionDto.Amount.Value,
+            createTransactionDto.CategoryId.Value,
+            createTransactionDto.UserId.Value,
+            createTransactionDto.CreatedAt ?? DateTime.UtcNow,
+            createTransactionDto.Comment);
 
         var postResult = await transactionRepository.AddTransactionAsync(transactionToAdd);
         return postResult.IsSuccess ? OperationResult<TransactionDto?>.Success(postResult.Data) 

@@ -12,7 +12,7 @@ public class OperationResult(bool isSuccess, string message)
 
 public class OperationResult<T>(T data, bool isSuccess, string message, OperationStatusCode operationStatusCode) : OperationResult(isSuccess, message)
 {
-    public T? Data { get; set; } = data;
+    public T Data { get; set; } = data;
     public static OperationResult<T> Success(T data) => new OperationResult<T>(data, true, string.Empty, OperationStatusCode.Ok);
     public new static OperationResult<T?> Failure(string message, OperationStatusCode operationStatusCode) 
         => new OperationResult<T?>(default(T), false, message, operationStatusCode);
