@@ -19,11 +19,11 @@ public class TransactionService(ITransactionRepository transactionRepository, IL
             return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
         
         var transactionToAdd = new TransactionEntity(
-            createTransactionDto.Amount.Value,
-            createTransactionDto.CategoryId.Value,
-            createTransactionDto.UserId.Value,
-            createTransactionDto.CreatedAt ?? DateTime.UtcNow,
-            createTransactionDto.Comment);
+            amount: createTransactionDto.Amount.Value, 
+            categoryId:createTransactionDto.CategoryId.Value,
+            userId:createTransactionDto.UserId.Value,
+            createdAt:createTransactionDto.CreatedAt ?? DateTime.UtcNow,
+            comment:createTransactionDto.Comment);
 
         var postResult = await transactionRepository.AddTransactionAsync(transactionToAdd);
         return postResult.IsSuccess ? OperationResult<TransactionDto?>.Success(postResult.Data) 

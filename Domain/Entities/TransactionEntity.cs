@@ -23,7 +23,7 @@ public class TransactionEntity
     [Required]
     public long UserId { get; set; }
 
-    public TransactionEntity(decimal amount, long categoryId, long userId,  DateTime createdAt, string? comment)
+    public TransactionEntity(decimal amount, long categoryId, long userId,  DateTime? createdAt, string? comment)
     {
         Amount = amount;
         CategoryId = categoryId;
