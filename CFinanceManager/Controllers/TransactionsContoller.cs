@@ -1,11 +1,13 @@
 ﻿using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
+using Application.Dto;
 using Application.Dto.TransactionDto;
 using Application.Interfaces.Services;
 
 namespace CFinanceManager.Controllers;
 
 [Route("api/transactions")]
+[ApiController]
 public class TransactionsController(ITransactionService transactionService, ILogger<TransactionsController> logger) : ControllerBase
 {
     [HttpGet()]
@@ -13,19 +15,20 @@ public class TransactionsController(ITransactionService transactionService, ILog
     {
         logger.LogInformation("Transaction get request received: id: {id}", id);
         var getResult = await transactionService.GetTransactionAsync(id);
+        
         if (getResult.IsSuccess)
         {
             logger.LogInformation("Get transaction successful: {result}", JsonSerializer.Serialize(getResult.Data));
             return Ok(getResult.Data);
         }
-        logger.LogWarning("Error while fetching transaction: {message}", getResult.Message);
-        return BadRequest(new {message = getResult.Message});
+        
+        return HandleErrorResult(getResult, "fetching");
     }
 
     [HttpPost]
     public async Task<ActionResult<TransactionDto>> PostTransaction([FromBody] CreateTransactionDto? transactionDto)
     {
-        logger.LogInformation("Transaction post request received:");
+        logger.LogInformation("Transaction post request received");
         if (!ModelState.IsValid)
         {
             logger.LogWarning("Invalid model state");
@@ -33,13 +36,14 @@ public class TransactionsController(ITransactionService transactionService, ILog
         }
 
         var postResult = await transactionService.AddTransactionAsync(transactionDto);
+        
         if (postResult.IsSuccess)
         {
             logger.LogInformation("Transaction post successful: {result}", JsonSerializer.Serialize(postResult.Data));
-            return Ok(postResult.Data);
+            return CreatedAtAction(nameof(GetTransaction), new { id = postResult.Data?.Id }, postResult.Data);
         }
-        logger.LogWarning("Error while posting transaction: {message}", postResult.Message);
-        return BadRequest(new {message = postResult.Message});
+        
+        return HandleErrorResult(postResult, "creating");
     }
 
     [HttpPatch] 
@@ -53,34 +57,45 @@ public class TransactionsController(ITransactionService transactionService, ILog
         }
         
         var patchResult = await transactionService.UpdateTransactionAsync(transactionDto);
+        
         if (patchResult.IsSuccess)
         {
             logger.LogInformation("Transaction patch successful: {result}", JsonSerializer.Serialize(patchResult.Data));
             return Ok(patchResult.Data);
         }
-        logger.LogWarning("Error patching transaction: {message}", patchResult.Message);
-        return BadRequest(new {message = patchResult.Message});
-            
         
+        return HandleErrorResult(patchResult, "updating");
     }
 
     [HttpDelete]
     public async Task<ActionResult<TransactionDto>> DeleteTransaction([FromQuery] long id)
     {
         logger.LogInformation("Transaction delete request received: id: {id}", id);
-        if (!ModelState.IsValid)
-        {
-            logger.LogWarning("Invalid model state");
-            return BadRequest(ModelState);
-        }
 
         var deleteResult = await transactionService.DeleteTransactionAsync(id);
+        
         if (deleteResult.IsSuccess)
         {
             logger.LogInformation("Transaction delete successful: {result}", JsonSerializer.Serialize(deleteResult.Data));
             return Ok(deleteResult.Data);
         }
-        logger.LogWarning("Error while deleting transaction: {message}", deleteResult.Message);
-        return BadRequest(new {message = deleteResult.Message});
+        
+        return HandleErrorResult(deleteResult, "deleting");
+    }
+
+    private ActionResult HandleErrorResult<T>(OperationResult<T> result, string operation)
+    {
+        // Логируем детальную ошибку для внутреннего использования
+        logger.LogError("Error while {operation} transaction: {message}", operation, result.Message);
+
+        // Возвращаем клиенту общее сообщение без деталей
+        return result.OperationStatusCode switch
+        {
+            OperationStatusCode.NotFound => NotFound(new { message = "Transaction not found" }),
+            OperationStatusCode.Conflict => Conflict(new { message = "A conflict occurred while processing the transaction" }),
+            OperationStatusCode.ValidationError => BadRequest(new { message = "Invalid transaction data" }),
+            OperationStatusCode.InternalError => StatusCode(500, new { message = "An error occurred while processing your request" }),
+            _ => StatusCode(500, new { message = "An unexpected error occurred" })
+        };
     }
 }
