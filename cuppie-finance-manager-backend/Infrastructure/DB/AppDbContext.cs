@@ -36,13 +36,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
     private void HandleCategoryDeletion()
     {
-        var deletedCategoryIds = ChangeTracker.Entries<CategoryEntity>()
+        var deletedCategories = ChangeTracker.Entries<CategoryEntity>()
             .Where(e => e.State == EntityState.Deleted)
             .Select(e => e.Entity.Id)
             .Distinct()
             .ToList();
 
-        if (!deletedCategoryIds.Any()) return;
+        if (!deletedCategories.Any()) return;
 
         var defaultExists = Categories.Any(c => c.Id == DefaultCategoryId);
         if (!defaultExists)
@@ -50,14 +50,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             throw new InvalidOperationException($"Default category with id={DefaultCategoryId} does not exist.");
         }
 
-        var idsParam = string.Join(",", deletedCategoryIds);
+        // Update transactions that reference the deleted categories
+        foreach (var categoryId in deletedCategories)
+        {
+            var transactionsToUpdate = Transactions
+                .Where(t => t.CategoryId == categoryId)
+                .ToList();
 
-        Database.ExecuteSqlRaw(
-            $"UPDATE \"Transactions\" SET \"CategoryId\" = {{0}} WHERE \"CategoryId\" IN ({idsParam})",
-            DefaultCategoryId
-        );
-
-        ChangeTracker.Clear();
+            foreach (var transaction in transactionsToUpdate)
+            {
+                transaction.CategoryId = DefaultCategoryId;
+            }
+        }
     }
 
 }

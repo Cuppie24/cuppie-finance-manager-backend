@@ -39,6 +39,7 @@ public class CategoryRepository(AppDbContext context, ILogger<CategoryRepository
                 return OperationResult<CategoryDto?>.Failure("Category not found", OperationStatusCode.NotFound);
 
             categoryToUpdate.Name = newCategory.Name ?? categoryToUpdate.Name;
+            categoryToUpdate.Income = newCategory.Income ?? categoryToUpdate.Income;
 
             await context.SaveChangesAsync();
             return OperationResult<CategoryDto?>.Success(new CategoryDto(categoryToUpdate));
