@@ -1,0 +1,5 @@
+services:
+  cuppie_forms_frontend:
+    build:
+      context: .
+    container_name: front

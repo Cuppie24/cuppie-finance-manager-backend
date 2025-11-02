@@ -1,0 +1,22 @@
+services:
+  db:
+    image: postgres:17
+    container_name: db
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - JWT__ACCESS_TOKEN_COOKIE_NAME=${JWT__ACCESS_TOKEN_COOKIE_NAME}
+      - JWT__REFRESH_TOKEN_COOKIE_NAME=${JWT__REFRESH_TOKEN_COOKIE_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - web
+volumes:
+  pgdata:
+networks:
+  web:
+    driver: bridge

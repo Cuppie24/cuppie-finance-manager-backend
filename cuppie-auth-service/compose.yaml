@@ -1,0 +1,70 @@
+services:
+  # traefik:
+  #   image: traefik:v3.4
+  #   container_name: traefik
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #     - "8080:8080"  # Dashboard
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.dashboard.rule=Host(`cuppie.dashboard`)"
+  #     - "traefik.http.routers.dashboard.entrypoints=websecure"
+  #     - "traefik.http.routers.dashboard.service=api@internal"
+  #     - "traefik.http.routers.dashboard.tls=true"
+  #   volumes:
+  #     - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+  #     - ./traefik/tls_dynamic.yml:/etc/traefik/tls_dynamic.yml:ro
+  #     - ./traefik/certs:/certs:ro
+  #     - /var/run/docker.sock:/var/run/docker.sock:ro
+  #   networks:
+  #     - web
+
+  cuppie_forms_backend:
+    build:
+      context: .
+    container_name: api
+    environment:
+      - ConnectionStrings__DefaultConnection=${DATABASE_CONNECTION_STRING}
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
+      - JWT__Key=${JWT__KEY}
+      - JWT__Audience=${JWT__AUDIENCE}
+      - JWT__Issuer=${JWT__ISSUER}
+      - JWT__AccessTokenExpiresInMinutes=${JWT__JWT_EXPIRES}
+      - JWT__RefreshTokenExpiresInMinutes=${JWT__REFRESH_EXPIRES}
+    # labels:
+    #   - "traefik.enable=true"
+    #   - "traefik.http.routers.api.rule=Host(`cuppie.api`)"
+    #   - "traefik.http.routers.api.entrypoints=websecure"
+    #   - "traefik.http.routers.api.tls=true"
+    #   - "traefik.http.services.api.loadbalancer.server.port=5000"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    networks:
+      - web
+
+  db:
+    image: postgres:16
+    container_name: users_auth_db
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - web
+
+volumes:
+  pgdata:
+
+networks:
+  web:
+    driver: bridge

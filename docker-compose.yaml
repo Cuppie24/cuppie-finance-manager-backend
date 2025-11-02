@@ -1,0 +1,123 @@
+services:
+  # PostgreSQL для Auth Service
+  auth-db:
+    image: postgres:16
+    container_name: cuppie-auth-db
+    restart: always
+    environment:
+      - POSTGRES_DB=users_auth_db
+      - POSTGRES_USER=cuppie
+      - POSTGRES_PASSWORD=cupcup
+    volumes:
+      - auth-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    networks:
+      - cuppie-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cuppie -d users_auth_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # PostgreSQL для Finance Backend
+  finance-db:
+    image: postgres:17
+    container_name: cuppie-finance-db
+    restart: always
+    environment:
+      - POSTGRES_DB=db
+      - POSTGRES_USER=cuppie
+      - POSTGRES_PASSWORD=cupcup
+    volumes:
+      - finance-pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - cuppie-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cuppie -d db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ./cuppie-auth-service
+      dockerfile: Dockerfile
+    container_name: cuppie-auth-service
+    restart: always
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=auth-db;Port=5432;Database=users_auth_db;Username=cuppie;Password=cupcup
+      - ASPNETCORE_URLS=http://+:5000
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
+      - JWT__Key=837978d1-f36f-4e88-b080-7bd501a9c1b6
+      - JWT__Audience=fm
+      - JWT__Issuer=CuppieAuth
+      - JWT__AccessTokenExpiresInMinutes=15
+      - JWT__RefreshTokenExpiresInMinutes=1440
+    ports:
+      - "5001:5000"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    networks:
+      - cuppie-network
+
+  # Finance Manager Backend
+  finance-backend:
+    build:
+      context: ./cuppie-finance-manager-backend
+      dockerfile: Dockerfile
+    container_name: cuppie-finance-backend
+    restart: always
+    environment:
+      - AuthService__BaseUrl=http://auth-service:5000
+      - ConnectionStrings__DefaultConnection=Host=finance-db;Port=5432;Database=db;Username=cuppie;Password=cupcup
+      - ASPNETCORE_URLS=http://+:5295
+      - ASPNETCORE_ENVIRONMENT=Development
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000
+      - JWT__Key=837978d1-f36f-4e88-b080-7bd501a9c1b6
+      - JWT__Audience=fm
+      - JWT__Issuer=CuppieAuth
+      - JWT__ACCESS_TOKEN_COOKIE_NAME=jwtToken
+      - JWT__REFRESH_TOKEN_COOKIE_NAME=refreshToken
+    ports:
+      - "5295:5295"
+    depends_on:
+      finance-db:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - cuppie-network
+
+  # Frontend
+  frontend:
+    build:
+      context: ./cuppie-finance-manager-frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost:5295
+    container_name: cuppie-frontend
+    restart: always
+    ports:
+      - "3000:80"
+    depends_on:
+      - finance-backend
+      - auth-service
+    networks:
+      - cuppie-network
+
+volumes:
+  auth-pgdata:
+    name: cuppie-auth-pgdata
+  finance-pgdata:
+    name: cuppie-finance-pgdata
+
+networks:
+  cuppie-network:
+    name: cuppie-network
+    driver: bridge
