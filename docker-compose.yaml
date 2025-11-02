@@ -1,7 +1,7 @@
 services:
   # PostgreSQL для Auth Service
   auth-db:
-    image: postgres:16
+    image: postgres:17
     container_name: cuppie-auth-db
     restart: always
     environment:
@@ -10,6 +10,7 @@ services:
       - POSTGRES_PASSWORD=cupcup
     volumes:
       - auth-pgdata:/var/lib/postgresql/data
+      - ./cuppie-auth-service/src/Cuppie.Infrastructure/Data/init.sql:/docker-entrypoint-initdb.d/finance-init.sql
     ports:
       - "5433:5432"
     networks:
@@ -31,6 +32,7 @@ services:
       - POSTGRES_PASSWORD=cupcup
     volumes:
       - finance-pgdata:/var/lib/postgresql/data
+      - ./cuppie-finance-manager-backend/Infrastructure/DB/init.sql:/docker-entrypoint-initdb.d/finance-init.sql
     ports:
       - "5432:5432"
     networks:

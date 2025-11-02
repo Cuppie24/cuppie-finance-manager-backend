@@ -25,6 +25,7 @@ import {
   ResponsiveContainer
 } from "recharts"
 import TransactionFilter from "../components/TransactionFilter"
+import { DateTimePicker } from "@/components/ui/date-time-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,16 +53,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { Calendar } from "@/components/ui/calendar"
-import { Calendar as CalendarIcon } from "lucide-react"
-import { format } from "date-fns"
-import { ru } from "date-fns/locale"
-import { cn } from "@/lib/utils"
 
 // API Configuration
 const API_BASE_URL = "http://localhost:5295/api"
@@ -118,16 +109,14 @@ const HomePage: React.FC = () => {
   const [newTransaction, setNewTransaction] = useState({
     amount: "",
     income: false,
-    categoryId: "",
+    categoryId: "1", // По умолчанию "Без категории"
     comment: "",
     createdAt: ""
   })
-  const [newTransactionDateOpen, setNewTransactionDateOpen] = useState(false)
   const [showCategoriesModal, setShowCategoriesModal] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [newCategory, setNewCategory] = useState({ name: "", income: false })
   const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState<number | null>(null)
-  const [editingDateOpen, setEditingDateOpen] = useState(false)
 
   // Загрузка всех категорий
   const loadCategories = async () => {
@@ -614,8 +603,17 @@ const HomePage: React.FC = () => {
                 value={newTransaction.income ? "income" : "expense"}
                 onValueChange={(value: string) => {
                   const isIncome = value === "income"
-                  // Reset categoryId when changing income type to avoid category mismatch
-                  setNewTransaction({ ...newTransaction, income: isIncome, categoryId: "" })
+                  // Устанавливаем категорию по умолчанию при изменении типа
+                  let defaultCategoryId = ""
+                  if (isIncome) {
+                    // Для дохода - первая категория с income: true
+                    const firstIncomeCategory = categories.find(cat => cat.income === true)
+                    defaultCategoryId = firstIncomeCategory ? firstIncomeCategory.id.toString() : ""
+                  } else {
+                    // Для расхода - категория "Без категории" (id=1)
+                    defaultCategoryId = "1"
+                  }
+                  setNewTransaction({ ...newTransaction, income: isIncome, categoryId: defaultCategoryId })
                 }}
               >
                 <SelectTrigger>
@@ -658,38 +656,16 @@ const HomePage: React.FC = () => {
             </div>
 
             <div className="flex flex-col flex-1 min-w-[200px]">
-              <Popover open={newTransactionDateOpen} onOpenChange={setNewTransactionDateOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !newTransaction.createdAt && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {newTransaction.createdAt
-                      ? format(new Date(newTransaction.createdAt), "dd.MM.yyyy HH:mm", { locale: ru })
-                      : "Дата (опционально)"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={newTransaction.createdAt ? new Date(newTransaction.createdAt) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        setNewTransaction({ ...newTransaction, createdAt: date.toISOString() })
-                      } else {
-                        setNewTransaction({ ...newTransaction, createdAt: "" })
-                      }
-                      setNewTransactionDateOpen(false)
-                    }}
-                    initialFocus
-                    locale={ru}
-                  />
-                </PopoverContent>
-              </Popover>
+              <DateTimePicker
+                selected={newTransaction.createdAt ? new Date(newTransaction.createdAt) : null}
+                onChange={(date) => {
+                  setNewTransaction({
+                    ...newTransaction,
+                    createdAt: date ? date.toISOString() : ""
+                  })
+                }}
+                placeholderText="Дата (опционально)"
+              />
             </div>
 
                 <Button
@@ -704,51 +680,55 @@ const HomePage: React.FC = () => {
           </Card>
         </div>
 
-        {/* Фильтр */}
-        <div className="px-6 sm:px-8 py-6 bg-white border-b border-slate-200">
-          <div className="flex justify-between items-center mb-3">
-            <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <span className="text-indigo-600">🔍</span> Фильтры
-            </h3>
-            <Button
-              onClick={() => setShowCategoriesModal(true)}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Tag className="w-4 h-4" />
-              Управление категориями
-            </Button>
+        {/* Фильтры и быстрый доступ */}
+        <div className="px-6 sm:px-8 py-4 bg-white border-b border-slate-200">
+          <div className="flex flex-wrap gap-3 items-center">
+            {/* Быстрые фильтры по периоду */}
+            <div className="flex flex-wrap gap-2">
+              <Button
+                onClick={handleThisMonth}
+                variant={activePeriodFilter === "thisMonth" ? "default" : "outline"}
+                size="sm"
+              >
+                Этот месяц
+              </Button>
+              <Button
+                onClick={handleLastMonth}
+                variant={activePeriodFilter === "lastMonth" ? "default" : "outline"}
+                size="sm"
+              >
+                Прошлый месяц
+              </Button>
+              <Button
+                onClick={handleThisYear}
+                variant={activePeriodFilter === "thisYear" ? "default" : "outline"}
+                size="sm"
+              >
+                Этот год
+              </Button>
+            </div>
+
+            <Separator orientation="vertical" className="h-8" />
+
+            {/* Расширенные фильтры */}
+            <TransactionFilter
+              filters={filters}
+              allCategories={categories}
+              onChange={setFilters}
+            />
+
+            <div className="ml-auto">
+              <Button
+                onClick={() => setShowCategoriesModal(true)}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Tag className="w-4 h-4" />
+                Категории
+              </Button>
+            </div>
           </div>
-          {/* Быстрые фильтры */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button
-              onClick={handleThisMonth}
-              variant={activePeriodFilter === "thisMonth" ? "default" : "secondary"}
-              size="sm"
-            >
-              Этот месяц
-            </Button>
-            <Button
-              onClick={handleLastMonth}
-              variant={activePeriodFilter === "lastMonth" ? "default" : "secondary"}
-              size="sm"
-            >
-              Прошлый месяц
-            </Button>
-            <Button
-              onClick={handleThisYear}
-              variant={activePeriodFilter === "thisYear" ? "default" : "secondary"}
-              size="sm"
-            >
-              Этот год
-            </Button>
-          </div>
-          <TransactionFilter
-            filters={filters}
-            allCategories={categories}
-            onChange={setFilters}
-          />
         </div>
 
         {/* Итоги */}
@@ -932,36 +912,17 @@ const HomePage: React.FC = () => {
                           </TableCell>
                           <TableCell className="text-muted-foreground text-sm">
                             {isEditing ? (
-                              <Popover open={editingDateOpen} onOpenChange={setEditingDateOpen}>
-                                <PopoverTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    className={cn(
-                                      "w-full justify-start text-left font-normal",
-                                      !editing.createdAt && "text-muted-foreground"
-                                    )}
-                                  >
-                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {editing.createdAt
-                                      ? format(new Date(editing.createdAt), "dd.MM.yyyy HH:mm", { locale: ru })
-                                      : "Выберите дату"}
-                                  </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={editing.createdAt ? new Date(editing.createdAt) : undefined}
-                                    onSelect={(date) => {
-                                      if (date) {
-                                        setEditing({ ...editing, createdAt: date.toISOString() })
-                                      }
-                                      setEditingDateOpen(false)
-                                    }}
-                                    initialFocus
-                                    locale={ru}
-                                  />
-                                </PopoverContent>
-                              </Popover>
+                              <DateTimePicker
+                                selected={editing.createdAt ? new Date(editing.createdAt) : new Date()}
+                                onChange={(date) => {
+                                  setEditing({
+                                    ...editing,
+                                    createdAt: date ? date.toISOString() : new Date().toISOString()
+                                  })
+                                }}
+                                isClearable={false}
+                                portalId="root"
+                              />
                             ) : (
                               new Date(t.createdAt).toLocaleString("ru-RU")
                             )}
