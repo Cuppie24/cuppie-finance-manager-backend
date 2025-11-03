@@ -524,8 +524,7 @@ const HomePage: React.FC = () => {
               </AvatarFallback>
             </Avatar>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">Привет, {user?.username}! 👋</h1>
-              <p className="text-sm opacity-90 mt-1">Управляйте своими финансами эффективно</p>
+              <h1 className="text-2xl sm:text-3xl font-bold">Привет, {user?.username}!</h1>
             </div>
           </div>
           <DropdownMenu>

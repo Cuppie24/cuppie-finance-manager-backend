@@ -6,8 +6,7 @@ import { z } from 'zod'
 import { AxiosError } from 'axios'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -64,7 +63,11 @@ const AuthPage: React.FC = () => {
   const getErrorMessage = (error: any): string => {
     if (error instanceof AxiosError) {
       const status = error.response?.status
-      const message = error.response?.data?.message || error.message
+      const serverMessage = error.response?.data?.message || error.response?.data
+
+      if (serverMessage && typeof serverMessage === 'string') {
+        return serverMessage
+      }
 
       switch (status) {
         case 404:
@@ -78,7 +81,7 @@ const AuthPage: React.FC = () => {
         case 503:
           return 'Сервис временно недоступен'
         default:
-          return message || 'Произошла неизвестная ошибка'
+          return error.message || 'Произошла неизвестная ошибка'
       }
     }
     return 'Произошла неизвестная ошибка'
@@ -91,7 +94,6 @@ const AuthPage: React.FC = () => {
       [name]: value
     }))
     
-    // Очищаем ошибку для данного поля
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -160,23 +162,14 @@ const AuthPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl mb-4 shadow-lg">
             <UserIcon className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2 bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Финансовый менеджер
           </h1>
-          <p className="text-slate-600 text-base">
-            Управляйте своими финансами эффективно
-          </p>
         </div>
 
         {/* Main Card */}
-        <Card className="shadow-xl">
-          <CardHeader>
-            <CardTitle className="text-2xl">Добро пожаловать</CardTitle>
-            <CardDescription>
-              Войдите в свой аккаунт или создайте новый
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        <Card className="shadow-xl border-0">
+          <CardContent className="pt-6">
             <Tabs value={isLogin ? "login" : "register"} onValueChange={(value) => switchTab(value === "login")} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Вход</TabsTrigger>
@@ -187,7 +180,7 @@ const AuthPage: React.FC = () => {
               {successMessage && (
                 <Alert className="mb-6 border-green-200 bg-green-50">
                   <CheckCircle2 className="h-4 w-4 text-green-600" />
-                  <AlertDescription className="text-green-800 font-semibold">
+                  <AlertDescription className="text-green-800 font-medium">
                     {successMessage}
                   </AlertDescription>
                 </Alert>
@@ -197,16 +190,15 @@ const AuthPage: React.FC = () => {
               {submitError && (
                 <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="font-semibold">
+                  <AlertDescription className="font-medium">
                     {submitError}
                   </AlertDescription>
                 </Alert>
               )}
 
-              <TabsContent value="login">
+              <TabsContent value="login" className="mt-0">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username">Имя пользователя</Label>
                     <Input
                       id="username"
                       name="username"
@@ -214,19 +206,15 @@ const AuthPage: React.FC = () => {
                       value={formData.username}
                       onChange={handleInputChange}
                       disabled={isSubmitting}
-                      placeholder="Введите имя пользователя"
-                      className={errors.username ? "border-red-500" : ""}
+                      placeholder="Имя пользователя"
+                      className={`h-11 ${errors.username ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                     />
                     {errors.username && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">{errors.username}</AlertDescription>
-                      </Alert>
+                      <p className="text-sm text-red-600 font-medium">{errors.username}</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Пароль</Label>
                     <Input
                       id="password"
                       name="password"
@@ -234,21 +222,18 @@ const AuthPage: React.FC = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       disabled={isSubmitting}
-                      placeholder="Введите пароль"
-                      className={errors.password ? "border-red-500" : ""}
+                      placeholder="Пароль"
+                      className={`h-11 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                     />
                     {errors.password && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">{errors.password}</AlertDescription>
-                      </Alert>
+                      <p className="text-sm text-red-600 font-medium">{errors.password}</p>
                     )}
                   </div>
 
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full"
+                    className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   >
                     {isSubmitting ? (
                       <>
@@ -262,10 +247,9 @@ const AuthPage: React.FC = () => {
                 </form>
               </TabsContent>
 
-              <TabsContent value="register">
+              <TabsContent value="register" className="mt-0">
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="username-register">Имя пользователя</Label>
                     <Input
                       id="username-register"
                       name="username"
@@ -273,19 +257,15 @@ const AuthPage: React.FC = () => {
                       value={formData.username}
                       onChange={handleInputChange}
                       disabled={isSubmitting}
-                      placeholder="Выберите имя пользователя"
-                      className={errors.username ? "border-red-500" : ""}
+                      placeholder="Имя пользователя"
+                      className={`h-11 ${errors.username ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                     />
                     {errors.username && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">{errors.username}</AlertDescription>
-                      </Alert>
+                      <p className="text-sm text-red-600 font-medium">{errors.username}</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
                       name="email"
@@ -293,19 +273,15 @@ const AuthPage: React.FC = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       disabled={isSubmitting}
-                      placeholder="Введите email"
-                      className={errors.email ? "border-red-500" : ""}
+                      placeholder="Email"
+                      className={`h-11 ${errors.email ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                     />
                     {errors.email && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">{errors.email}</AlertDescription>
-                      </Alert>
+                      <p className="text-sm text-red-600 font-medium">{errors.email}</p>
                     )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password-register">Пароль</Label>
                     <Input
                       id="password-register"
                       name="password"
@@ -313,21 +289,18 @@ const AuthPage: React.FC = () => {
                       value={formData.password}
                       onChange={handleInputChange}
                       disabled={isSubmitting}
-                      placeholder="Создайте пароль"
-                      className={errors.password ? "border-red-500" : ""}
+                      placeholder="Пароль"
+                      className={`h-11 ${errors.password ? "border-red-500 focus-visible:ring-red-500" : ""}`}
                     />
                     {errors.password && (
-                      <Alert variant="destructive" className="py-2">
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertDescription className="text-sm">{errors.password}</AlertDescription>
-                      </Alert>
+                      <p className="text-sm text-red-600 font-medium">{errors.password}</p>
                     )}
                   </div>
 
                   <Button
                     type="submit"
                     disabled={isSubmitting}
-                    className="w-full"
+                    className="w-full h-11 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                   >
                     {isSubmitting ? (
                       <>

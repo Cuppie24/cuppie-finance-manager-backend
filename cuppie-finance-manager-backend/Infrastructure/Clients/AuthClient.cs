@@ -18,7 +18,7 @@ public class AuthClient(HttpClient httpClient, ILogger<AuthClient> logger, IConf
     {
         var response = await httpClient.PostAsJsonAsync($"{BaseUrl}/api/auth/register", requestDto);
         if (!response.IsSuccessStatusCode)
-            return Failure<AuthResponseDto>(response);
+            return await FailureAsync<AuthResponseDto>(response);
 
         return await ParseResponse<AuthResponseDto>(response);
     }
@@ -27,7 +27,7 @@ public class AuthClient(HttpClient httpClient, ILogger<AuthClient> logger, IConf
     {
         var response = await httpClient.PostAsJsonAsync($"{BaseUrl}/api/auth/login", requestDto);
         if (!response.IsSuccessStatusCode)
-            return Failure<AuthResponseDto>(response);
+            return await FailureAsync<AuthResponseDto>(response);
 
         return await ParseResponse<AuthResponseDto>(response);
     }
@@ -36,7 +36,7 @@ public class AuthClient(HttpClient httpClient, ILogger<AuthClient> logger, IConf
     {
         var response = await httpClient.PostAsJsonAsync($"{BaseUrl}/api/auth/refresh", requestDto);
         if (!response.IsSuccessStatusCode)
-            return Failure<AuthResponseDto>(response);
+            return await FailureAsync<AuthResponseDto>(response);
 
         return await ParseResponse<AuthResponseDto>(response);
     }
@@ -47,9 +47,9 @@ public class AuthClient(HttpClient httpClient, ILogger<AuthClient> logger, IConf
         if (!response.IsSuccessStatusCode)
         {
             logger.LogDebug("Error while validating token. Auth service response: {body}", response.Content.ReadAsStringAsync().Result);
-            return Failure<UserDto>(response);
+            return await FailureAsync<UserDto>(response);
         }
-            
+
 
         return await ParseResponse<UserDto>(response);
     }
@@ -58,7 +58,7 @@ public class AuthClient(HttpClient httpClient, ILogger<AuthClient> logger, IConf
     {
         var response = await httpClient.DeleteAsync($"{BaseUrl}/api/auth?id={id}");
         if (!response.IsSuccessStatusCode)
-            return Failure<UserDto>(response);
+            return await FailureAsync<UserDto>(response);
 
         return await ParseResponse<UserDto>(response);
     }
@@ -107,8 +107,41 @@ public class AuthClient(HttpClient httpClient, ILogger<AuthClient> logger, IConf
             OperationStatusCode.InternalError);
     }
 
-    private OperationResult<T?> Failure<T>(HttpResponseMessage response) =>
-        OperationResult<T>.Failure(
-            $"Auth service error: {response.StatusCode}",
-            MapStatusCode(response.StatusCode));
+    private async Task<OperationResult<T?>> FailureAsync<T>(HttpResponseMessage response)
+    {
+        var statusCode = MapStatusCode(response.StatusCode);
+        string errorMessage;
+
+        try
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            logger.LogDebug("Auth service error response body: {body}", body);
+
+            // Попытка извлечь сообщение из JSON ответа
+            if (!string.IsNullOrWhiteSpace(body))
+            {
+                // Сервис возвращает просто строку в теле ответа для Conflict и Unauthorized
+                if (response.StatusCode == HttpStatusCode.Conflict ||
+                    response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    errorMessage = body.Trim('"'); // Убираем кавычки если есть
+                }
+                else
+                {
+                    errorMessage = body;
+                }
+            }
+            else
+            {
+                errorMessage = $"Auth service error: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error reading error response from auth service");
+            errorMessage = $"Auth service error: {response.StatusCode}";
+        }
+
+        return OperationResult<T>.Failure(errorMessage, statusCode);
+    }
 }

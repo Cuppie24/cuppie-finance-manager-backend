@@ -116,13 +116,13 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
 
         return result.OperationStatusCode switch
         {
-            OperationStatusCode.NotFound => NotFound(new { message = "User not found" }),
-            OperationStatusCode.Conflict => Conflict(new { message = "A conflict occurred while processing the user" }),
-            OperationStatusCode.ValidationError => BadRequest(new { message = "Invalid transaction data" }),
-            OperationStatusCode.Unauthorized => Unauthorized(new { message = "Unauthorized access" }),
-            OperationStatusCode.BadRequest => BadRequest(new { message = "Bad request" }),
-            OperationStatusCode.InternalError => StatusCode(500, new { message = "An error occurred while processing your request" }),
-            _ => StatusCode(500, new { message = "An unexpected error occurred" })
+            OperationStatusCode.NotFound => NotFound(new { message = result.Message ?? "User not found" }),
+            OperationStatusCode.Conflict => Conflict(new { message = result.Message ?? "A conflict occurred while processing the user" }),
+            OperationStatusCode.ValidationError => BadRequest(new { message = result.Message ?? "Invalid data" }),
+            OperationStatusCode.Unauthorized => Unauthorized(new { message = result.Message ?? "Unauthorized access" }),
+            OperationStatusCode.BadRequest => BadRequest(new { message = result.Message ?? "Bad request" }),
+            OperationStatusCode.InternalError => StatusCode(500, new { message = result.Message ?? "An error occurred while processing your request" }),
+            _ => StatusCode(500, new { message = result.Message ?? "An unexpected error occurred" })
         };
     }
     
