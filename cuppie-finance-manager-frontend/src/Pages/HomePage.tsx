@@ -113,7 +113,16 @@ const HomePage: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [viewMode, setViewMode] = useState<"table" | "chart">("table")
   const [showDeleteModal, setShowDeleteModal] = useState<number | null>(null)
-  const [filters, setFilters] = useState<TransactionFilters>({})
+  const [filters, setFilters] = useState<TransactionFilters>(() => {
+    // По умолчанию устанавливаем фильтр "Этот месяц"
+    const now = new Date()
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    return {
+      fromDate: firstDay,
+      toDate: lastDay
+    }
+  })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   
@@ -363,18 +372,28 @@ const HomePage: React.FC = () => {
     const from = new Date(filters.fromDate)
     const to = new Date(filters.toDate)
     
+    // Проверка на "сегодня"
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+    if (from.getTime() === todayStart.getTime() && to.getTime() === todayEnd.getTime()) {
+      return "Сегодня"
+    }
+    
+    // Проверка на "этот месяц"
     const thisMonthFirst = new Date(now.getFullYear(), now.getMonth(), 1)
     const thisMonthLast = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     if (from.getTime() === thisMonthFirst.getTime() && to.getTime() === thisMonthLast.getTime()) {
       return "Этот месяц"
     }
     
+    // Проверка на "прошлый месяц"
     const lastMonthFirst = new Date(now.getFullYear(), now.getMonth() - 1, 1)
     const lastMonthLast = new Date(now.getFullYear(), now.getMonth(), 0)
     if (from.getTime() === lastMonthFirst.getTime() && to.getTime() === lastMonthLast.getTime()) {
       return "Прошлый месяц"
     }
     
+    // Проверка на "этот год"
     const thisYearFirst = new Date(now.getFullYear(), 0, 1)
     const thisYearLast = new Date(now.getFullYear(), 11, 31)
     if (from.getTime() === thisYearFirst.getTime() && to.getTime() === thisYearLast.getTime()) {
@@ -384,11 +403,15 @@ const HomePage: React.FC = () => {
     return "Период"
   }
 
-  const handlePeriodFilter = (type: "thisMonth" | "lastMonth" | "thisYear") => {
+  const handlePeriodFilter = (type: "today" | "thisMonth" | "lastMonth" | "thisYear") => {
     const now = new Date()
     let firstDay: Date, lastDay: Date
     
     switch(type) {
+      case "today":
+        firstDay = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+        lastDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999)
+        break
       case "thisMonth":
         firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
         lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
@@ -451,12 +474,12 @@ const HomePage: React.FC = () => {
                 {user?.username?.[0]?.toUpperCase() || "U"}
               </AvatarFallback>
             </Avatar>
-            <div>
+          <div>
               <p className="text-sm font-semibold text-slate-900">Привет, {user?.username}!</p>
               <p className="text-xs text-slate-500">Финансовый менеджер</p>
-            </div>
           </div>
-          
+        </div>
+
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -479,7 +502,7 @@ const HomePage: React.FC = () => {
                   <div className="flex flex-col space-y-1">
                     <p className="text-sm font-medium">{user?.username}</p>
                     <p className="text-xs text-muted-foreground">{user?.email}</p>
-                  </div>
+            </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
@@ -495,9 +518,9 @@ const HomePage: React.FC = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-        </div>
-      </div>
+            </div>
+            </div>
+            </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Ошибки */}
@@ -522,12 +545,12 @@ const HomePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-green-100 rounded-lg">
-                      <TrendingUp className="w-5 h-5 text-green-600" />
-                    </div>
+                <TrendingUp className="w-5 h-5 text-green-600" />
+              </div>
                     <div>
                       <p className="text-xs text-green-600 font-medium">Доход</p>
                       <p className="text-2xl font-bold text-green-700">{formatNumber(totalIncome)}</p>
-                    </div>
+            </div>
                   </div>
                 </div>
               </CardContent>
@@ -538,12 +561,12 @@ const HomePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="p-2 bg-red-100 rounded-lg">
-                      <TrendingDown className="w-5 h-5 text-red-600" />
-                    </div>
+                <TrendingDown className="w-5 h-5 text-red-600" />
+              </div>
                     <div>
                       <p className="text-xs text-red-600 font-medium">Расход</p>
                       <p className="text-2xl font-bold text-red-700">{formatNumber(totalExpense)}</p>
-                    </div>
+            </div>
                   </div>
                 </div>
               </CardContent>
@@ -554,12 +577,12 @@ const HomePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className={`p-2 rounded-lg ${balance >= 0 ? 'bg-blue-100' : 'bg-orange-100'}`}>
-                      <Wallet className={`w-5 h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
-                    </div>
+                <Wallet className={`w-5 h-5 ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+              </div>
                     <div>
                       <p className={`text-xs font-medium ${balance >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>Баланс</p>
                       <p className={`text-2xl font-bold ${balance >= 0 ? 'text-blue-700' : 'text-orange-700'}`}>{formatNumber(balance)}</p>
-                    </div>
+            </div>
                   </div>
                 </div>
               </CardContent>
@@ -588,6 +611,9 @@ const HomePage: React.FC = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handlePeriodFilter("today")}>
+                  Сегодня
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handlePeriodFilter("thisMonth")}>
                   Этот месяц
                 </DropdownMenuItem>
@@ -615,13 +641,13 @@ const HomePage: React.FC = () => {
         </div>
 
         {/* Контент */}
-        {loading ? (
+          {loading ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <Skeleton key={i} className="h-16 w-full" />
             ))}
-          </div>
-        ) : (
+              </div>
+            ) : (
           <Tabs value={viewMode} className="w-full">
             <TabsContent value="table" className="mt-0">
               {transactions.length === 0 ? (
@@ -651,9 +677,9 @@ const HomePage: React.FC = () => {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {transactions.map((t) => {
+                    {transactions.map((t) => {
                           const category = categories.find((c) => c.id === t.categoryId)?.name || t.categoryName || "—"
-                          return (
+                      return (
                             <TableRow key={t.id}>
                               <TableCell>
                                 <div className="flex items-center gap-2">
@@ -748,7 +774,7 @@ const HomePage: React.FC = () => {
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem 
-                                      onClick={() => setShowDeleteModal(t.id)}
+                                  onClick={() => setShowDeleteModal(t.id)}
                                       className="text-red-600"
                                     >
                                       <Trash2 className="mr-2 h-4 w-4" />
@@ -762,7 +788,7 @@ const HomePage: React.FC = () => {
                         </Card>
                       )
                     })}
-                  </div>
+              </div>
                 </>
               )}
             </TabsContent>
@@ -786,19 +812,19 @@ const HomePage: React.FC = () => {
                         {incomeChartData.length === 0 ? (
                           <div className="text-center text-slate-500 py-12">
                             <p className="text-sm">Нет данных о доходах</p>
-                          </div>
-                        ) : (
+                </div>
+              ) : (
                           <ResponsiveContainer width="100%" height={300}>
-                            <RechartsPie>
-                              <Pie
+                  <RechartsPie>
+                    <Pie
                                 data={incomeChartData}
-                                dataKey="value"
-                                nameKey="name"
-                                cx="50%"
-                                cy="50%"
+                      dataKey="value"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
                                 outerRadius={100}
-                                label={({ name, percentage }) => `${name}: ${percentage}%`}
-                                animationDuration={400}
+                                label={({ percentage }) => `${percentage}%`}
+                                isAnimationActive={false}
                               >
                                 {incomeChartData.map((_, index) => (
                                   <Cell key={`income-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -835,25 +861,25 @@ const HomePage: React.FC = () => {
                                 cx="50%"
                                 cy="50%"
                                 outerRadius={100}
-                                label={({ name, percentage }) => `${name}: ${percentage}%`}
-                                animationDuration={400}
+                                label={({ percentage }) => `${percentage}%`}
+                                isAnimationActive={false}
                               >
                                 {expenseChartData.map((_, index) => (
                                   <Cell key={`expense-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                              </Pie>
+                      ))}
+                    </Pie>
                               <Tooltip 
                                 formatter={(value: any, name: any, props: any) => [
                                   `${formatNumber(Number(value))} (${props.payload.percentage}%)`,
                                   name
                                 ]} 
                               />
-                              <Legend />
-                            </RechartsPie>
-                          </ResponsiveContainer>
-                        )}
+                    <Legend />
+                  </RechartsPie>
+                </ResponsiveContainer>
+              )}
                       </div>
-                    </div>
+            </div>
                   )}
                 </CardContent>
               </Card>
@@ -896,11 +922,17 @@ const HomePage: React.FC = () => {
                   value={transactionForm.income ? "income" : "expense"}
                   onValueChange={(value) => {
                     const isIncome = value === "income"
-                    const firstCategory = getFilteredCategories(isIncome)[0]
+                    const filteredCategories = getFilteredCategories(isIncome)
+                    // Выбираем первую доступную категорию нового типа
+                    const firstCategory = filteredCategories[0]
+                    // Если нет категорий нового типа, пытаемся найти категорию с id=1, иначе оставляем пустым
+                    const newCategoryId = firstCategory 
+                      ? firstCategory.id.toString() 
+                      : (categories.find(c => c.id === 1 && c.income === isIncome) ? "1" : "")
                     setTransactionForm({ 
                       ...transactionForm, 
                       income: isIncome,
-                      categoryId: firstCategory ? firstCategory.id.toString() : "1"
+                      categoryId: newCategoryId
                     })
                   }}
                 >
@@ -912,13 +944,20 @@ const HomePage: React.FC = () => {
                     <SelectItem value="income">💰 Доход</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-            </div>
+        </div>
+      </div>
 
             <div>
               <Select
                 value={transactionForm.categoryId}
-                onValueChange={(value) => setTransactionForm({ ...transactionForm, categoryId: value })}
+                onValueChange={(value) => {
+                  const selectedCategory = categories.find(c => c.id === parseInt(value))
+                  // Проверяем, что выбранная категория соответствует типу транзакции
+                  if (selectedCategory && selectedCategory.income === transactionForm.income) {
+                    setTransactionForm({ ...transactionForm, categoryId: value })
+                  }
+                }}
+                disabled={getFilteredCategories(transactionForm.income).length === 0}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Категория *" />
@@ -931,15 +970,20 @@ const HomePage: React.FC = () => {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+              {getFilteredCategories(transactionForm.income).length === 0 && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Нет категорий для {transactionForm.income ? "доходов" : "расходов"}
+                </p>
+              )}
+              </div>
 
-            <div>
+              <div>
               <Input
                 placeholder="Комментарий (опционально)"
                 value={transactionForm.comment}
                 onChange={(e) => setTransactionForm({ ...transactionForm, comment: e.target.value })}
               />
-            </div>
+              </div>
 
             <div>
               <DateTimePicker
@@ -997,7 +1041,11 @@ const HomePage: React.FC = () => {
                     onValueChange={(value) => {
                       const isIncome = value === "income"
                       const matchingCategories = getFilteredCategories(isIncome)
-                      const newCategoryId = matchingCategories.length > 0 ? matchingCategories[0].id : editingTransaction.categoryId
+                      // Если текущая категория не подходит для нового типа, выбираем первую доступную
+                      const currentCategory = categories.find(c => c.id === editingTransaction.categoryId)
+                      const newCategoryId = currentCategory && currentCategory.income === isIncome 
+                        ? editingTransaction.categoryId 
+                        : (matchingCategories.length > 0 ? matchingCategories[0].id : editingTransaction.categoryId)
                       setEditingTransaction({ 
                         ...editingTransaction, 
                         income: isIncome, 
@@ -1019,10 +1067,17 @@ const HomePage: React.FC = () => {
               <div>
                 <Select
                   value={editingTransaction.categoryId.toString()}
-                  onValueChange={(value) => setEditingTransaction({ 
-                    ...editingTransaction, 
-                    categoryId: parseInt(value) 
-                  })}
+                  onValueChange={(value) => {
+                    const selectedCategory = categories.find(c => c.id === parseInt(value))
+                    // Проверяем, что выбранная категория соответствует типу транзакции
+                    if (selectedCategory && selectedCategory.income === editingTransaction.income) {
+                      setEditingTransaction({ 
+                        ...editingTransaction, 
+                        categoryId: parseInt(value) 
+                      })
+                    }
+                  }}
+                  disabled={getFilteredCategories(editingTransaction.income).length === 0}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -1035,6 +1090,11 @@ const HomePage: React.FC = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                {getFilteredCategories(editingTransaction.income).length === 0 && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Нет категорий для {editingTransaction.income ? "доходов" : "расходов"}
+                  </p>
+                )}
               </div>
 
               <div>
@@ -1063,7 +1123,7 @@ const HomePage: React.FC = () => {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditModal(false)}>
-              Отмена
+                Отмена
             </Button>
             <Button onClick={handleUpdateTransaction}>
               Сохранить
@@ -1078,19 +1138,15 @@ const HomePage: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Tag className="w-5 h-5" />
-              Управление категориями
+              Категории
             </DialogTitle>
-            <DialogDescription>
-              Добавьте, отредактируйте или удалите категории
-            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="border-b pb-4">
-              <h3 className="font-semibold mb-3">Добавить категорию</h3>
               <div className="flex gap-3">
                 <Input
-                  placeholder="Название категории"
+                  placeholder="Новая категория"
                   value={newCategory.name}
                   onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
                   onKeyDown={(e) => {
@@ -1113,11 +1169,10 @@ const HomePage: React.FC = () => {
                 <Button onClick={handleCreateCategory} disabled={!newCategory.name.trim()}>
                   <Plus className="w-4 h-4" />
                 </Button>
-              </div>
             </div>
+          </div>
 
             <div>
-              <h3 className="font-semibold mb-3">Категории</h3>
               {categories.length === 0 ? (
                 <p className="text-muted-foreground text-sm text-center py-8">
                   Нет категорий
@@ -1168,7 +1223,7 @@ const HomePage: React.FC = () => {
                                 {category.income ? "💰" : "💸"}
                               </Badge>
                               <span className="font-medium">{category.name}</span>
-                            </div>
+        </div>
                             <Button
                               onClick={() => setEditingCategory({ ...category })}
                               size="icon"
@@ -1194,12 +1249,6 @@ const HomePage: React.FC = () => {
               )}
             </div>
           </div>
-
-          <DialogFooter>
-            <Button onClick={() => setShowCategoriesModal(false)}>
-              Закрыть
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
@@ -1209,7 +1258,7 @@ const HomePage: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Удалить транзакцию?</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Транзакция будет удалена навсегда.
+              Это действие нельзя отменить.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -1227,7 +1276,7 @@ const HomePage: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Удалить категорию?</AlertDialogTitle>
             <AlertDialogDescription>
-              Это действие нельзя отменить. Категория будет удалена, но транзакции останутся.
+              Транзакции с этой категорией сохранятся.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
