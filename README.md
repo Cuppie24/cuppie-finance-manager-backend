@@ -79,8 +79,8 @@ docker compose up --build -d
 
 После запуска приложение будет доступно по адресам:
 - **Frontend**: http://localhost:3000
-- **Finance API Swagger**: http://localhost:5296/swagger
-- **Auth API Swagger**: http://localhost:5295/api/swagger
+- **Finance API Swagger**: http://localhost:5295/swagger
+- **Auth API Swagger**: http://localhost:5001/swagger
 
 ## Настройки баз данных
 
