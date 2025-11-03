@@ -93,14 +93,20 @@ const formatNumber = (num: number): string => {
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
-  if (days === 0) {
+
+  // Сравниваем по границам календарных дней в локальном времени,
+  // чтобы избежать ошибок из‑за часовых поясов/UTC.
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const startOfYesterday = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), startOfToday.getDate() - 1)
+  const startOfWeekWindow = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), startOfToday.getDate() - 6)
+
+  if (date >= startOfToday) {
     return `Сегодня, ${date.toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' })}`
-  } else if (days === 1) {
+  }
+  if (date >= startOfYesterday && date < startOfToday) {
     return `Вчера, ${date.toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' })}`
-  } else if (days < 7) {
+  }
+  if (date >= startOfWeekWindow) {
     return date.toLocaleDateString("ru-RU", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
   }
   return date.toLocaleDateString("ru-RU", { day: 'numeric', month: 'short', year: 'numeric' })
