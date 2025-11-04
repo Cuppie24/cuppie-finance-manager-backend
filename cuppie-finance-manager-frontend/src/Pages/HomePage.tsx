@@ -90,6 +90,52 @@ const formatNumber = (num: number): string => {
   return (isNegative ? '-' : '') + parts.join('.')
 }
 
+// Функции для работы с localStorage
+const FILTERS_STORAGE_KEY = 'transactionFilters'
+
+const saveFiltersToStorage = (filters: TransactionFilters) => {
+  try {
+    const serialized = {
+      ...filters,
+      fromDate: filters.fromDate?.toISOString(),
+      toDate: filters.toDate?.toISOString()
+    }
+    localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(serialized))
+  } catch (error) {
+    console.error('Ошибка сохранения фильтров в localStorage:', error)
+  }
+}
+
+const loadFiltersFromStorage = (): TransactionFilters | null => {
+  try {
+    const saved = localStorage.getItem(FILTERS_STORAGE_KEY)
+    // Если ключа нет в localStorage, значит это первый запуск - возвращаем null
+    if (!saved) return null
+    
+    // Если ключ есть, значит фильтры уже были установлены (даже если пустые после сброса)
+    const parsed = JSON.parse(saved)
+    return {
+      ...parsed,
+      fromDate: parsed.fromDate ? new Date(parsed.fromDate) : undefined,
+      toDate: parsed.toDate ? new Date(parsed.toDate) : undefined
+    }
+  } catch (error) {
+    console.error('Ошибка загрузки фильтров из localStorage:', error)
+    return null
+  }
+}
+
+const getDefaultFilters = (): TransactionFilters => {
+  // По умолчанию устанавливаем фильтр "Этот месяц"
+  const now = new Date()
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+  return {
+    fromDate: firstDay,
+    toDate: lastDay
+  }
+}
+
 const formatDate = (dateString: string): string => {
   // Парсим дату - если сервер отправляет UTC время в формате ISO, JavaScript автоматически конвертирует в локальное время
   // Если строка заканчивается на 'Z' или содержит информацию о часовом поясе, парсим как есть
@@ -136,14 +182,10 @@ const HomePage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"table" | "chart">("table")
   const [showDeleteModal, setShowDeleteModal] = useState<number | null>(null)
   const [filters, setFilters] = useState<TransactionFilters>(() => {
-    // По умолчанию устанавливаем фильтр "Этот месяц"
-    const now = new Date()
-    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1)
-    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    return {
-      fromDate: firstDay,
-      toDate: lastDay
-    }
+    // Пытаемся загрузить сохраненные фильтры из localStorage
+    const savedFilters = loadFiltersFromStorage()
+    // Если есть сохраненные фильтры, используем их, иначе - значения по умолчанию
+    return savedFilters || getDefaultFilters()
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -212,6 +254,11 @@ const HomePage: React.FC = () => {
       setLoading(false)
     }
   }
+
+  // Сохранение фильтров в localStorage при их изменении
+  useEffect(() => {
+    saveFiltersToStorage(filters)
+  }, [filters])
 
   useEffect(() => {
     if (user?.id) {
