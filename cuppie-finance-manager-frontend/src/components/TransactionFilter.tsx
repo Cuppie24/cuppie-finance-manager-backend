@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React, { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
@@ -43,6 +43,7 @@ interface TransactionFiltersProps {
 const TransactionFilter: React.FC<TransactionFiltersProps> = ({ filters, allCategories, onChange }) => {
   const [showCategories, setShowCategories] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
+  const categoriesListRef = useRef<HTMLDivElement>(null)
 
   const handleTypeChange = (value: string) => {
     const val = value as "all" | "income" | "expense"
@@ -127,8 +128,34 @@ const TransactionFilter: React.FC<TransactionFiltersProps> = ({ filters, allCate
                   <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-full p-0">
-                <div className="p-2 max-h-64 overflow-y-auto">
+              <PopoverContent 
+                className="w-full p-0" 
+                style={{ maxHeight: 'none' }}
+              >
+                <div 
+                  ref={categoriesListRef}
+                  className="p-2 max-h-64 overflow-y-auto overscroll-contain" 
+                  style={{ 
+                    WebkitOverflowScrolling: 'touch', 
+                    touchAction: 'pan-y',
+                    overflowY: 'auto',
+                    overflowX: 'hidden'
+                  }}
+                  onWheel={(e) => {
+                    // Останавливаем всплытие события прокрутки, чтобы оно обрабатывалось внутри списка
+                    const element = e.currentTarget
+                    const { scrollTop, scrollHeight, clientHeight } = element
+                    const deltaY = e.deltaY
+                    
+                    // Всегда останавливаем всплытие для прокрутки внутри списка
+                    e.stopPropagation()
+                    
+                    // Если прокрутка достигла границ, не позволяем прокручивать дальше
+                    if ((scrollTop === 0 && deltaY < 0) || (scrollTop + clientHeight >= scrollHeight && deltaY > 0)) {
+                      e.preventDefault()
+                    }
+                  }}
+                >
                   {allCategories.map((category) => (
                     <label
                       key={category.id}

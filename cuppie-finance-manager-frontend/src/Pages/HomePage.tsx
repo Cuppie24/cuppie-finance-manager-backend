@@ -91,11 +91,24 @@ const formatNumber = (num: number): string => {
 }
 
 const formatDate = (dateString: string): string => {
-  const date = new Date(dateString)
+  // Парсим дату - если сервер отправляет UTC время в формате ISO, JavaScript автоматически конвертирует в локальное время
+  // Если строка заканчивается на 'Z' или содержит информацию о часовом поясе, парсим как есть
+  // Иначе предполагаем, что это UTC время и добавляем 'Z'
+  let date: Date
+  if (dateString.endsWith('Z') || dateString.match(/[+-]\d{2}:\d{2}$/)) {
+    // Уже есть информация о часовом поясе
+    date = new Date(dateString)
+  } else if (dateString.includes('T')) {
+    // ISO формат без часового пояса - предполагаем UTC
+    date = new Date(dateString + 'Z')
+  } else {
+    // Просто дата без времени
+    date = new Date(dateString)
+  }
+  
   const now = new Date()
 
-  // Сравниваем по границам календарных дней в локальном времени,
-  // чтобы избежать ошибок из‑за часовых поясов/UTC.
+  // Сравниваем по границам календарных дней в локальном времени
   const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
   const startOfYesterday = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), startOfToday.getDate() - 1)
   const startOfWeekWindow = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), startOfToday.getDate() - 6)
@@ -107,7 +120,10 @@ const formatDate = (dateString: string): string => {
     return `Вчера, ${date.toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' })}`
   }
   if (date >= startOfWeekWindow) {
-    return date.toLocaleDateString("ru-RU", { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    // Для дат в пределах недели показываем дату и время
+    const dateStr = date.toLocaleDateString("ru-RU", { day: 'numeric', month: 'short' })
+    const timeStr = date.toLocaleTimeString("ru-RU", { hour: '2-digit', minute: '2-digit' })
+    return `${dateStr}, ${timeStr}`
   }
   return date.toLocaleDateString("ru-RU", { day: 'numeric', month: 'short', year: 'numeric' })
 }
