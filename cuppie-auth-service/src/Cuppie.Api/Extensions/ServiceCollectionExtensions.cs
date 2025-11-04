@@ -15,56 +15,6 @@ public static class ServiceCollectionExtensions
         services.AddControllers();
         services.AddSwaggerGen();
         services.AddOpenApi();
-        // services.AddCors(options =>
-        // {
-        //     var corsOrigins = Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS") ?? 
-        //                      config.GetValue<string>("CORS_ALLOWED_ORIGINS") ?? 
-        //                      "https://cuppie.cup";
-        //     
-        //     var origins = corsOrigins.Split(',', StringSplitOptions.RemoveEmptyEntries)
-        //         .Select(o => o.Trim())
-        //         .ToArray();
-        //     
-        //     // Log CORS configuration for debugging
-        //     Console.WriteLine($"CORS Origins configured: {string.Join(", ", origins)}");
-        //     
-        //     options.AddPolicy("FrontDev", cors =>
-        //     {
-        //         cors.WithOrigins(origins)
-        //             .AllowAnyMethod()
-        //             .AllowAnyHeader()
-        //             .AllowCredentials()
-        //             .SetPreflightMaxAge(TimeSpan.FromMinutes(5));
-        //     });
-        // });
-        // services.AddAuthentication("Bearer")
-        //     .AddJwtBearer("Bearer", options =>
-        //     {
-        //         var jwtOptions = config.GetSection("JWT").Get<JwtOptions>();
-        //         options.TokenValidationParameters = new TokenValidationParameters
-        //         {
-        //             ValidateIssuer = true,
-        //             ValidIssuer = jwtOptions.Issuer,
-        //             ValidateAudience = true,
-        //             ValidAudience = jwtOptions.Audience,
-        //             ValidateLifetime = true,
-        //             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
-        //             ValidateIssuerSigningKey = true
-        //         };
-        // Чтобы JWT брался из cookie (НЕ стандартное поведение, нужно вручную)
-        // options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
-        // {
-        //     OnMessageReceived = context =>
-        //     {
-        //         if (context.Request.Cookies.TryGetValue("jwt", out var token))
-        //         {
-        //             context.JwtToken = token;
-        //         }
-        //         return Task.CompletedTask;
-        //     }
-        // };
-        //    
-        // });
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<ICryptoService, CryptoService>();
