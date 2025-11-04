@@ -2,12 +2,14 @@
 using Application.Dto;
 using Application.Dto.Finance.CategoryDto;
 using Application.Interfaces.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CFinanceManager.Controllers.Finance;
 
 [Route("api/categories")]
 [ApiController]
+[Authorize]
 public class CategoryController(ICategoryService categoryService, ILogger<CategoryController> logger): ControllerBase
 {
     [HttpGet]

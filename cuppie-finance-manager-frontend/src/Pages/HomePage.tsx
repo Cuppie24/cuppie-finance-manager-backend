@@ -171,7 +171,7 @@ const HomePage: React.FC = () => {
     setError(null)
     
     try {
-      const filterDto: any = { userId: user.id }
+      const filterDto: any = {}
 
       if (filters.type === "income") filterDto.income = true
       else if (filters.type === "expense") filterDto.income = false
@@ -213,7 +213,6 @@ const HomePage: React.FC = () => {
         income: transactionForm.income,
         categoryId: parseInt(transactionForm.categoryId),
         comment: transactionForm.comment || null,
-        userId: user.id,
         createdAt: transactionForm.createdAt ? new Date(transactionForm.createdAt).toISOString() : new Date().toISOString()
       }
 
@@ -239,11 +238,12 @@ const HomePage: React.FC = () => {
     if (!editingTransaction) return
 
     try {
+      const { userId, ...updateDto } = editingTransaction
       const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(editingTransaction)
+        body: JSON.stringify(updateDto)
       })
 
       if (!response.ok) throw new Error("Ошибка обновления")

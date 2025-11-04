@@ -13,20 +13,11 @@ public class TransactionService(ITransactionRepository transactionRepository, IL
 {
     public async Task<OperationResult<TransactionDto?>> AddTransactionAsync(CreateTransactionDto createTransactionDto)
     {
-        if(!createTransactionDto.Amount.HasValue)
-            return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
-        if(!createTransactionDto.CategoryId.HasValue)
-            return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
-        if(!createTransactionDto.UserId.HasValue)
-            return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
-        if(!createTransactionDto.Income.HasValue)
-            return OperationResult<TransactionDto>.Failure("Validation error", OperationStatusCode.ValidationError);
-        
         var transactionToAdd = new TransactionEntity(
-            amount: createTransactionDto.Amount.Value, 
-            categoryId:createTransactionDto.CategoryId.Value,
-            userId:createTransactionDto.UserId.Value,
-            income:createTransactionDto.Income.Value,
+            amount: createTransactionDto.Amount, 
+            categoryId:createTransactionDto.CategoryId,
+            userId:createTransactionDto.UserId,
+            income:createTransactionDto.Income,
             createdAt:createTransactionDto.CreatedAt ?? DateTime.UtcNow,
             comment:createTransactionDto.Comment);
 

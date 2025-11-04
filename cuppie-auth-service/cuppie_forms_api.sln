@@ -5,7 +5,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Dockerfile = Dockerfile
 		compose.yaml = compose.yaml
 		.env = .env
-		db-seed.sql = db-seed.sql
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cuppie.Api", "src\Cuppie.Api\Cuppie.Api.csproj", "{9E689C7F-FAA1-44F8-BD6A-9211FE4378C3}"

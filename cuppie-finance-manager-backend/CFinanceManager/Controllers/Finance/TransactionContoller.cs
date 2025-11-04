@@ -3,7 +3,7 @@ using System.Text.Json;
 using Application.Dto;
 using Application.Dto.Finance.TransactionDto;
 using Application.Interfaces.Services;
-using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CFinanceManager.Controllers.Finance;
@@ -21,24 +21,26 @@ public class TransactionController(ITransactionService transactionService, ILogg
     }
 
     [HttpPost]
-    // [Authorize]
-    public async Task<ActionResult<TransactionDto>> PostTransaction([FromBody] CreateTransactionDto transactionDto)
+    public async Task<ActionResult<TransactionDto>> PostTransaction([FromBody] CreateTransactionRequestDto requestDto)
     {
-        // var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        // if (userIdClaim is null) return Unauthorized();
-        // logger.LogError($"User with id: {userIdClaim?.Value}");
-        // if (transactionDto.UserId != long.Parse(userIdClaim.Value))
-        //     return Unauthorized();
+        int userId = GetUserId();
+        if (userId == 0)
+            return Unauthorized();
+        var createTransactionDto = new CreateTransactionDto(requestDto, userId);
         var operation = "adding";
-        var postResult = await transactionService.AddTransactionAsync(transactionDto);
+        var postResult = await transactionService.AddTransactionAsync(createTransactionDto);
         return HandleResponse(postResult, operation);
     }
 
     [HttpPatch] 
-    public async Task<ActionResult<TransactionDto>> PatchTransaction([FromBody] PatchTransactionDto transactionDto)
+    public async Task<ActionResult<TransactionDto>> PatchTransaction([FromBody] PatchTransactionRequestDto requestDto)
     {
+        int? userId = GetUserId();
+        if (userId == 0)
+            return Unauthorized();
+        var patchTransactionDto = new PatchTransactionDto(requestDto, userId);
         var operation = "patching";
-        var patchResult = await transactionService.UpdateTransactionAsync(transactionDto);
+        var patchResult = await transactionService.UpdateTransactionAsync(patchTransactionDto);
         return HandleResponse(patchResult, operation);
     }
 
@@ -62,7 +64,7 @@ public class TransactionController(ITransactionService transactionService, ILogg
     {
         if (result.IsSuccess)
         {
-            logger.LogInformation("{operation} successful: {data}", operation, JsonSerializer.Serialize(result.Data));
+            logger.LogInformation("{operation} transaction successful: {data}", operation, JsonSerializer.Serialize(result.Data));
             return Ok(result.Data);
         }
 
@@ -78,5 +80,14 @@ public class TransactionController(ITransactionService transactionService, ILogg
             OperationStatusCode.InternalError => StatusCode(500, new { message = "An error occurred while processing your request" }),
             _ => StatusCode(500, new { message = "An unexpected error occurred" })
         };
+    }
+
+    private int GetUserId()
+    {
+        var userIdString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdInt = int.Parse(userIdString ?? "0");
+        if(userIdInt == 0)
+            logger.LogError("Не удалось извлечь UserId из jwt токена");
+        return userIdInt;
     }
 }

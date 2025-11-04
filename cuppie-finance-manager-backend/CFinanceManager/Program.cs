@@ -39,45 +39,74 @@ builder.Services.AddHttpClient<IAuthClient, AuthClient>();
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(Environment.GetEnvironmentVariable("DbConnectionString") is null
-        ? builder.Configuration.GetConnectionString("DefaultConnection"): Environment.GetEnvironmentVariable("DbConnectionString")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // JWT settings
-var jwtSettings = builder.Configuration.GetSection("JWT");
-var secretKey = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+    var jwtSettings = builder.Configuration.GetSection("JWT");
+    var secretKey = Encoding.UTF8.GetBytes(jwtSettings["Key"]);
+    var tokenName = jwtSettings["ACCESS_TOKEN_COOKIE_NAME"];
 
-builder.Services.AddAuthentication(options =>
+    if (string.IsNullOrEmpty(tokenName))
     {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(secretKey),
-            ClockSkew = TimeSpan.Zero
-        };
+        throw new InvalidOperationException("JWT ACCESS_TOKEN_COOKIE_NAME is not configured");
+    }
 
-        // Берём токен из HttpOnly cookie
-        options.Events = new JwtBearerEvents
+    builder.Services.AddAuthentication(options =>
         {
-            OnMessageReceived = context =>
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
             {
-                if (context.Request.Cookies.ContainsKey("jwtToken"))
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = jwtSettings["Issuer"],
+                ValidAudience = jwtSettings["Audience"],
+                IssuerSigningKey = new SymmetricSecurityKey(secretKey)
+            };
+
+            // Берём токен из HttpOnly cookie
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
                 {
-                    context.Token = context.Request.Cookies["jwtToken"];
+                    if (context.Request.Cookies.TryGetValue(tokenName, out var token) && !string.IsNullOrEmpty(token))
+                    {
+                        context.Token = token;
+                        var loggerFactory = context.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                        var logger = loggerFactory?.CreateLogger("JwtBearer");
+                        logger?.LogDebug("JWT token found in cookie: {CookieName}", tokenName);
+                    }
+                    else
+                    {
+                        var loggerFactory = context.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                        var logger = loggerFactory?.CreateLogger("JwtBearer");
+                        logger?.LogWarning("JWT token not found in cookie: {CookieName}. Available cookies: {Cookies}", 
+                            tokenName, string.Join(", ", context.Request.Cookies.Keys));
+                    }
+                    return Task.CompletedTask;
+                },
+                OnAuthenticationFailed = context =>
+                {
+                    var loggerFactory = context.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                    var logger = loggerFactory?.CreateLogger("JwtBearer");
+                    logger?.LogError(context.Exception, "JWT Authentication failed");
+                    return Task.CompletedTask;
+                },
+                OnChallenge = context =>
+                {
+                    var loggerFactory = context.HttpContext.RequestServices.GetService<ILoggerFactory>();
+                    var logger = loggerFactory?.CreateLogger("JwtBearer");
+                    logger?.LogWarning("JWT Challenge triggered. Error: {Error}, ErrorDescription: {ErrorDescription}", 
+                        context.Error, context.ErrorDescription);
+                    return Task.CompletedTask;
                 }
-                return Task.CompletedTask;
-            }
-        };
-    });
+            };
+        });
 
 builder.Services.AddAuthorization();
 
