@@ -24,7 +24,7 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
         var operation = "register"; // for logs
         
         var ip = GetIp();
-        if (string.IsNullOrWhiteSpace(ip)) return BadRequest("Can't extract id");
+        if (string.IsNullOrWhiteSpace(ip)) return BadRequest("Can't extract transactionId");
         var requestDto = new AuthRegisterRequestDto(registerModel, ip);
         var postResult = await authService.AddUser(requestDto);
         
@@ -43,7 +43,7 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
     {
         var operation = "login"; // for logs
         var ip = GetIp();
-        if (string.IsNullOrWhiteSpace(ip)) return BadRequest("Can't extract id");
+        if (string.IsNullOrWhiteSpace(ip)) return BadRequest("Can't extract transactionId");
         var loginRequest = new AuthLoginRequestDto(loginModel, ip);
         var loginResult = await authService.Login(loginRequest);
         
@@ -84,7 +84,7 @@ public class AuthController(IAuthService authService, ILogger<AuthController> lo
             return Unauthorized("JWT cookie not found or empty");
         logger.LogInformation("Token refresh request received: {token}", refreshToken); 
         var ip = GetIp();
-        if (string.IsNullOrWhiteSpace(ip)) return Unauthorized("Can't extract id");
+        if (string.IsNullOrWhiteSpace(ip)) return Unauthorized("Can't extract transactionId");
         var refreshResult = await authService.RefreshToken(new TokenRefreshRequestDto(refreshToken, ip));
         
         var finalResponse = OperationResult<UserDto>.Failure(refreshResult.Message,refreshResult.OperationStatusCode);

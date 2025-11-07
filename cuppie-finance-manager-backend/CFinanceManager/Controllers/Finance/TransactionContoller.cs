@@ -13,10 +13,10 @@ namespace CFinanceManager.Controllers.Finance;
 public class TransactionController(ITransactionService transactionService, ILogger<TransactionController> logger) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<TransactionDto>> GetTransaction([FromQuery] long id)
+    public async Task<ActionResult<TransactionDto>> GetTransaction([FromQuery] long transactionId)
     {
         var operation = "fetching";
-        var fetchResult = await transactionService.GetTransactionAsync(id);
+        var fetchResult = await transactionService.GetTransactionAsync(transactionId);
         return HandleResponse(fetchResult, operation);
     }
 
@@ -45,10 +45,10 @@ public class TransactionController(ITransactionService transactionService, ILogg
     }
 
     [HttpDelete]
-    public async Task<ActionResult<TransactionDto>> DeleteTransaction([FromQuery] long id)
+    public async Task<ActionResult<TransactionDto>> DeleteTransaction([FromQuery] long transactionId)
     {
         var operation = "deleting";
-        var deleteResult = await transactionService.DeleteTransactionAsync(id);
+        var deleteResult = await transactionService.DeleteTransactionAsync(transactionId);
         return HandleResponse(deleteResult, operation);
     }
 
@@ -56,6 +56,8 @@ public class TransactionController(ITransactionService transactionService, ILogg
     public async Task<ActionResult<List<TransactionDto>>> GetTransactions([FromBody] TransactionFilterDto filterDto)
     {
         var operation = "getting";
+        var userId = GetUserId();
+        filterDto.UserId = userId;
         var getResult = await transactionService.GetTransactionsAsync(filterDto);
         return HandleResponse(getResult, operation);
     }

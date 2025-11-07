@@ -47,7 +47,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         var defaultExists = Categories.Any(c => c.Id == DefaultCategoryId);
         if (!defaultExists)
         {
-            throw new InvalidOperationException($"Default category with id={DefaultCategoryId} does not exist.");
+            throw new InvalidOperationException($"Default category with transactionId={DefaultCategoryId} does not exist.");
         }
 
         // Update transactions that reference the deleted categories
